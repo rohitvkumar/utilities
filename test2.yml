@@ -1,0 +1,20 @@
+#These topics are not created automatically by tandem
+#They may be created by a human calling register_topics.py
+topics:
+- name: anonymizer
+  topic: global.anonymizer
+  archivePolicy: original
+  backupPolicy: original
+  configurationPolicy: sourceOfTruth
+  partitionPolicy: single
+  retentionPolicy: fourWeeks
+  visibilityPolicy: public
+
+- name: anonymizer.deletedIDs
+  topic: global.anonymizer.deletedIDs
+  archivePolicy: original
+  backupPolicy: original
+  configurationPolicy: sourceOfTruth
+  partitionPolicy: single
+  retentionPolicy: oneWeek
+  visibilityPolicy: public

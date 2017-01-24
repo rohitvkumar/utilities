@@ -1,0 +1,6 @@
+DO/1 81 166
+SchemaVersion: 23
+ObjectId: int:05000141CA782B1F
+ObjectType: appLaunchEvent
+
+{"appUri":"web:https://www.youtube.com/tv","bodyId":"int:05000141CA782B1F","sequenceNumber":"1482238683","timestampMilliseconds":"1482238683","type":"appLaunchEvent"}

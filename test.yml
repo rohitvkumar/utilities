@@ -1,0 +1,23 @@
+#These topics are not created automatically by tandem
+#They may be created by a human calling register_topics.py
+topics:
+- name: npvrShowingsModification
+  topic: tec1.ono_dev1.npvr.npvrShowingsModification
+  archivePolicy: none
+  backupPolicy: none
+  cleanupPolicy:
+    dataRetentionTime: oneWeek
+  configurationPolicy: eventData
+  partitionPolicy: normal
+  privacyPolicy: none
+  visibilityPolicy: public
+- name: reconcileOrphanedSxSubscription
+  topic: tec1.ono_dev1.npvr.reconcileOrphanedSxSubscription
+  archivePolicy: none
+  backupPolicy: none
+  cleanupPolicy:
+    dataRetentionTime: oneDay
+  configurationPolicy: eventData
+  partitionPolicy: normal
+  privacyPolicy: none
+  visibilityPolicy: public

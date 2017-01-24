@@ -1,0 +1,1 @@
+docker.tivo.com/rvalsakumar/livelog-anon-kstreams:latest
