@@ -3,8 +3,7 @@
 import argparse
 import atexit
 import os
-from pykafka import KafkaClient, Topic
-from pykafka.common import OffsetType
+from kafka import KafkaConsumer
 import sys
 import traceback
 import time
@@ -15,23 +14,20 @@ simulated = False
 
 def list_topics(client, name):
     if not name:
-        for item in client.topics.items():
+        for item in sorted(client.topics()):
             print item
     else:
-        topic = client.topics[name]
-        print 'Name: ', topic.name
-        print 'Partition Count: ', len(topic.partitions)
-        for key in topic.partitions:
-            part = topic.partitions[key]
-            #print 'Id: {id}, ISR: {isr}, Leader: {ld}, Replicas: {r}'.format(id=part.id, isr=part.isr, ld=part.leader, r=part.replicas)
+        partitions = client.partitions_for_topic(name)
+        print 'Name: ', name
+        print 'Partition Count: ', len(partitions)
             
 def read_topic(consumer, key_filter, message_filter, print_key, print_meta, rule):
     rules = {'all':all, 'any':any}
     for message in consumer:
         if key_filter:
-            if not message.partition_key:
+            if not message.key:
                 continue
-            if not rules[rule](x in message.partition_key for x in key_filter):
+            if not rules[rule](x in message.key for x in key_filter):
                 continue
         if message_filter:
             if not message.value:
@@ -39,9 +35,9 @@ def read_topic(consumer, key_filter, message_filter, print_key, print_meta, rule
             if not rules[rule](x in message.value for x in message_filter):
                 continue
         if print_meta:
-            print '{p}:{o}:'.format(p=message.partition.id, o=message.offset),
+            print '{p}:{o}:'.format(p=message.partition, o=message.offset),
         if print_key:
-            print '{}:'.format(message.partition_key),
+            print '{}:'.format(message.key),
         print message.value
         
         
@@ -81,25 +77,32 @@ def main():
     if verbose:
         print args
     
-    bootstrap = '{0}:{1}'.format(args.broker, args.port)
-    client = KafkaClient(hosts=bootstrap)
+    bootstrap = ['{0}:{1}'.format(args.broker, args.port)]
     
     try:
-        
+        client = KafkaConsumer(args.topic,
+                         enable_auto_commit=False,
+                         auto_offset_reset='earliest',
+                         bootstrap_servers=bootstrap)
         if args.list:
             list_topics(client, args.topic)
             sys.exit(0)
         
         if args.topic:
-            topic = client.topics[args.topic]
             if not args.offset or args.offset == 'end':
-                consumer = topic.get_simple_consumer(reset_offset_on_start=True, auto_offset_reset=OffsetType.LATEST)
+                client = KafkaConsumer(args.topic,
+                         enable_auto_commit=False,
+                         auto_offset_reset='latest',
+                         bootstrap_servers=bootstrap)
             elif args.offset == 'beginning':
-                consumer = topic.get_simple_consumer(reset_offset_on_start=True, auto_offset_reset=OffsetType.EARLIEST)
-            read_topic(consumer, args.key_filter, args.message_filter, args.Key, args.Metadata, args.rule)
+                client = KafkaConsumer(args.topic,
+                         enable_auto_commit=False,
+                         auto_offset_reset='earliest',
+                         bootstrap_servers=bootstrap)
+            read_topic(client, args.key_filter, args.message_filter, args.Key, args.Metadata, args.rule)
     except KeyboardInterrupt as e:
         print "Stopped"
-        consumer.stop()
+        client.close()
 
 if __name__ == "__main__":
     atexit.register(wait_for_threads)
