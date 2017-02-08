@@ -56,12 +56,24 @@ def main():
             msg = args.message
         
         if args.domain:
+            protocol = "DO/1"
             str = ""
-            for line in msg.splitlines():
-                str = str + line + '\r\n'
-            if not str.endswith('\r\n\r\n'):
-                str = str.strip('\r\n')
-            msg = str
+            len_headers = None
+            for line in msg.splitlines():                
+                if not str and (line.startswith("DO") or line.startswith("MRPC")):
+                    protocol = line.split()[0]
+                    continue
+                if not len_headers:
+                    if not line.endswith('\r\n'):
+                        line = line.strip() + '\r\n'
+                    str = str + line
+                    if line == '\r\n':
+                        len_headers = len(str)
+                else:
+                    str = str + line
+                
+            len_msg = len(str) - len_headers
+            msg = "{0} {1} {2}\r\n{3}".format(protocol, len_headers, len_msg, str)
             if verbose:
                 print "Msg: ", msg
             
