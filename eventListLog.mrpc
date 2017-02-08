@@ -1,0 +1,20 @@
+MRPC/2 520 1570
+AccountId: 0011131196
+Content-Type: application/json
+HardwarePlatform: tivo_stb
+RequestType: partnerEventListLog
+ResponseCount: none
+RpcId: 140217
+SchemaVersion: 23
+Type: request
+X-Hop: 0
+X-Middlemind-Host: 10.100.218.18
+X-Middlemind-PartnerId: 3095
+X-Middlemind-ReferenceId:
+X-Middlemind-RequestId: 10.100.218.18-anon:0000016600-69664-1486244833
+X-Middlemind-Source: anon:0000016600
+X-applicationName: Unknown Application
+X-applicationSessionId: tsn:8D900019025F0B7:0
+X-applicationVersion: Unknown Version
+
+{"event": [{"bodyId": "tsn:8D900019025F0B7", "deviceType": "stb", "programPosition": "1486244699879", "sequenceNumber": 870, "source": "liveTv", "timeZone": "America/Los_Angeles", "timestampMilliseconds": "1486244700024", "type": "viewStopEvent", "what": {"channelNumber": "4-2", "sourceType": "terrestrial", "stationId": "tivo:st.38519923", "type": "viewBroadcast"}}, {"bodyId": "tsn:8D900019025F0B7", "programPosition": "1486244694000", "recordingId": "tivo:rc.11779", "sequenceNumber": 871, "subscriptionType": "seasonPass", "timestampMilliseconds": "1486244700590", "type": "recordingStopEvent", "what": {"channelNumber": "4-2", "contentIdGuess": "tivo:ct.350987242", "sourceType": "terrestrial", "stationId": "tivo:st.38519923", "type": "viewBroadcast"}}, {"bodyId": "tsn:8D900019025F0B7", "deviceType": "stb", "programPosition": "1486244700865", "sequenceNumber": 872, "source": "liveTv", "timeZone": "America/Los_Angeles", "timestampMilliseconds": "1486244700886", "type": "viewStartEvent", "what": {"channelNumber": "4-2", "sourceType": "terrestrial", "stationId": "tivo:st.38519923", "type": "viewBroadcast"}}, {"bodyId": "tsn:8D900019025F0B7", "programPosition": "1486244700865", "sequenceNumber": 873, "timestampMilliseconds": "1486244700887", "type": "viewStateEvent", "viewport": {"height": 65536, "type": "rectangle", "width": 65536, "x": 0, "y": 0}}, {"bodyId": "tsn:8D900019025F0B7", "playSpeed": 100, "programPosition": "1486244700865", "sequenceNumber": 874, "timestampMilliseconds": "1486244700887", "type": "viewStateEvent"}], "type": "partnerEventListLog"}
