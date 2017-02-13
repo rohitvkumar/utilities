@@ -1,6 +1,7 @@
-DO/1 81 178
-SchemaVersion: 23
-ObjectId: int: 05000182E60821E7
+DO/1 114 146
+SchemaVersion: 24
+ObjectId: int: 50001E29BD843F2
 ObjectType: appLaunchEvent
+AccountId: int: 500016536432738
 
-{"appUri":"x-tivo:web:sandbox_web:https://www.youtube.com/tv","bodyId":"int:05000182E60821E7","sequenceNumber":"1482427216","timestampMilliseconds":"1486515315000","type":"appLaunchEvent"}
+{"appUri":"netflix:netflix","bodyId":"int:050001E29BD843F2","sequenceNumber":1411,"timestampMilliseconds":"1486638067806","type":"appLaunchEvent"}

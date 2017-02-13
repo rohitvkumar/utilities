@@ -61,9 +61,10 @@ def main():
     parser.add_argument("-k", "--key-filter", help="Filter term for key", metavar="TERM", action="append")
     parser.add_argument("-m", "--message-filter", help="Filter term for message", metavar="TERM", action="append")
     parser.add_argument("-L", "--list", help="List topic(s)", action="store_true")
-    parser.add_argument("-o", "--offset", help="Offset to read from", choices=[None, 'beginning', 'end'], default=None)
+    parser.add_argument("-o", "--offset", help="Offset to read from", choices=['beginning', 'end'], default='end')
     parser.add_argument("-M", "--Metadata", help="Include metadata about the message", action="store_true")
     parser.add_argument("-K", "--Key", help="Include message key", action="store_true")
+    parser.add_argument("-e", "--exit-at-end", help="Quit when no new messages read in 5 seconds.", action="store_true")
     parser.add_argument("-r", "--rule", help="Match all or any", choices=['all', 'any'], default='all')
     
     args = parser.parse_args()
@@ -89,16 +90,19 @@ def main():
             sys.exit(0)
         
         if args.topic:
-            if not args.offset or args.offset == 'end':
+            timeout_ms = 5000 if args.exit_at_end else float('inf')
+            if args.offset == 'end':
                 client = KafkaConsumer(args.topic,
                          enable_auto_commit=False,
                          auto_offset_reset='latest',
-                         bootstrap_servers=bootstrap)
-            elif args.offset == 'beginning':
+                         bootstrap_servers=bootstrap,
+                         consumer_timeout_ms=timeout_ms)
+            else:
                 client = KafkaConsumer(args.topic,
                          enable_auto_commit=False,
                          auto_offset_reset='earliest',
-                         bootstrap_servers=bootstrap)
+                         bootstrap_servers=bootstrap,
+                         consumer_timeout_ms=timeout_ms)
             read_topic(client, args.key_filter, args.message_filter, args.Key, args.Metadata, args.rule)
     except KeyboardInterrupt as e:
         print "Stopped"
