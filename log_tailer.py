@@ -81,7 +81,7 @@ def read_topic(consumer,
 def wait_for_threads():
     seconds = 0
     while threading.active_count() != 0:
-        print ('Waiting for threads to exit.')
+        print ('Waiting for threads to exit.', file=sys.stderr)
         time.sleep(1)
         seconds += 1
         if seconds == 10:
@@ -122,7 +122,7 @@ def main():
     bootstrap = ['{0}:{1}'.format(args.broker, args.port)]
     
     try:
-        timeout_ms = 30000 if args.exit_at_end else float('inf')
+        timeout_ms = 15000 if args.exit_at_end else float('inf')
         client = KafkaConsumer(
                          enable_auto_commit=False,
                          auto_offset_reset='earliest',
@@ -133,57 +133,57 @@ def main():
             list_topics(client, args.topic)
             sys.exit(0)
         
-        if args.topic:
-            partitions = client.partitions_for_topic(args.topic)
-            tps = [TopicPartition(args.topic, p) for p in partitions]
+        if not args.topic:
+            parser.error("A topic name is required.")
+        
+        partitions = client.partitions_for_topic(args.topic)
+        tps = [TopicPartition(args.topic, p) for p in partitions]
+        client.assign(tps)
+        total = None
+        if args.time_offset:
+            offtime_ms = 24 * 3600 * 1000 # Set it to 1d by default
+            off = args.time_offset
+            if off == '2d':
+                offtime_ms *= 2
+            if off == '4d':
+                offtime_ms *= 4
+            if off == '1w':
+                offtime_ms *= 7
+            if off == '2w':
+                offtime_ms *= 14
+            if off == '1m':
+                offtime_ms *= 30
             
-            client.assign(tps)
-            
-            total = None
-            if args.time_offset:
-                off = args.time_offset
-                offtime_ms = 24 * 3600 * 1000
-                if off == '2d':
-                    offtime_ms *= 2
-                if off == '4d':
-                    offtime_ms *= 4
-                if off == '1w':
-                    offtime_ms *= 7
-                if off == '2w':
-                    offtime_ms *= 14
-                if off == '1m':
-                    offtime_ms *= 30
-                
-                currtime_ms = int(time.time() * 1000)
-                timestamps = {}
-                for tp in tps:
-                    timestamps[tp] = currtime_ms - offtime_ms
-                tpts = client.offsets_for_times(timestamps)
-                start_tpts = client.beginning_offsets(tps)
-                end_tpts = client.end_offsets(tps)
-                total = 0
-                for tp in tpts:
-                    start_offset = tpts[tp].offset if tpts[tp] and tpts[tp].offset else start_tpts[tp]
-                    total += end_tpts[tp] - start_offset
-                    client.seek(tp, start_offset)
-                print('Total records to consume: ', total, file=sys.stderr)
-            elif args.offset == 'end':
-                client.seek_to_end()
-            else:
-                client.seek_to_beginning()
-            
-            read_topic(client,
-                       args.key_filter,
-                       args.message_filter,
-                       args.Key,
-                       args.Metadata,
-                       args.Timestamp,
-                       args.Suppress,
-                       args.Date_filter,
-                       args.rule,
-                       int(total))
+            currtime_ms = int(time.time() * 1000)
+            timestamps = {}
+            for tp in tps:
+                timestamps[tp] = currtime_ms - offtime_ms
+            time_tpts = client.offsets_for_times(timestamps)
+            beg_tpts = client.beginning_offsets(tps)
+            end_tpts = client.end_offsets(tps)
+            total = 0
+            for tp in time_tpts:
+                start_offset = time_tpts[tp].offset if time_tpts[tp] and time_tpts[tp].offset else beg_tpts[tp]
+                total += end_tpts[tp] - start_offset
+                client.seek(tp, start_offset)
+            print('Total records to consume: ', total, file=sys.stderr)
+        elif args.offset == 'end':
+            client.seek_to_end()
+        else:
+            client.seek_to_beginning()
+        
+        read_topic(client,
+                   args.key_filter,
+                   args.message_filter,
+                   args.Key,
+                   args.Metadata,
+                   args.Timestamp,
+                   args.Suppress,
+                   args.Date_filter,
+                   args.rule,
+                   int(total))
     except KeyboardInterrupt as e:
-        print ("Stopped")
+        print ("Stopped", file=sys.stderr)
         client.close()
 
 if __name__ == "__main__":
