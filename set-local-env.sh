@@ -1,0 +1,5 @@
+FOLDER=${1:-${PWD##*/}}
+export CONTAINER_NAME="$FOLDER"
+export DATACENTER_NAME='tec1'
+export ENVIRONMENT_NAME='rohit'
+export SERVICE_NAME="$FOLDER"

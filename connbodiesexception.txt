@@ -1,0 +1,39 @@
+ /home/tivo/stream-job/bin/stream-job
+2820  INFO  c.t.c.a.init.MainApplication - Starting ConnectedBodies Anonymizer application
+2952  INFO  c.t.i.m.i.KafkaEmitterLowLevelFactory - Using kafka bootstrap broker: localhost:50002
+3083  INFO  c.t.c.a.init.MainApplication - Started Registering dynconfig objects
+3083  DEBUG c.t.c.a.s.RegisterDynconfigObjects - C: connected-bodies-anonymizer, D: tec1, E: rohit, S: connected-bodies-anonymizer
+3083  INFO  c.t.c.a.s.RegisterDynconfigObjects - Started registering variable definition
+3084  INFO  c.t.c.a.s.RegisterDynconfigObjects - Registering OverrideAnonymizerHost variable definition
+3256  INFO  c.t.c.a.s.RegisterDynconfigObjects - Registering OverrideAnonymizerPort variable definition
+3265  INFO  c.t.c.a.s.RegisterDynconfigObjects - Registering AnonymizedConnectedBodiesTopic variable definition
+3272  INFO  c.t.c.a.s.RegisterDynconfigObjects - Properties url: http://localhost:50000/Properties?environment=rohit&service=connected-bodies-anonymizer
+3276  INFO  c.t.c.a.s.RegisterDynconfigObjects - Service properties: {OverrideAnonymizerHost=localhost, OverrideAnonymizerPort=50016}
+3279  DEBUG c.t.c.a.s.RegisterDynconfigObjects - Registering alerts
+Exception in thread "main" java.lang.NoSuchMethodError: com.fasterxml.jackson.databind.jsontype.impl.TypeNameIdResolver.<init>(Lcom/fasterxml/jackson/databind/cfg/MapperConfig;Lcom/fasterxml/jackson/databind/JavaType;Ljava/util/HashMap;Ljava/util/HashMap;)V
+	at com.tivo.tws.nextgen.triocore.internal.TrioTypeIdResolver.<init>(TrioTypeIdResolver.java:21)
+	at com.tivo.tws.nextgen.triocore.internal.TrioResolverBuilder.buildTypeDeserializer(TrioResolverBuilder.java:46)
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory.findTypeDeserializer(BasicDeserializerFactory.java:1363)
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory.findPropertyTypeDeserializer(BasicDeserializerFactory.java:1498)
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory.resolveMemberAndTypeAnnotations(BasicDeserializerFactory.java:1847)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerFactory.constructSettableProperty(BeanDeserializerFactory.java:728)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerFactory.addBeanProps(BeanDeserializerFactory.java:516)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerFactory.buildBeanDeserializer(BeanDeserializerFactory.java:226)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerFactory.createBeanDeserializer(BeanDeserializerFactory.java:141)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createDeserializer2(DeserializerCache.java:403)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createDeserializer(DeserializerCache.java:349)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCache2(DeserializerCache.java:264)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCacheValueDeserializer(DeserializerCache.java:244)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache.findValueDeserializer(DeserializerCache.java:142)
+	at com.fasterxml.jackson.databind.DeserializationContext.findRootValueDeserializer(DeserializationContext.java:476)
+	at com.fasterxml.jackson.databind.ObjectMapper._findRootDeserializer(ObjectMapper.java:3899)
+	at com.fasterxml.jackson.databind.ObjectMapper._readValue(ObjectMapper.java:3765)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:2099)
+	at com.fasterxml.jackson.databind.ObjectMapper.treeToValue(ObjectMapper.java:2596)
+	at com.tivo.tws.nextgen.triocore.TrioUtil.jsonToTrio(TrioUtil.java:303)
+	at com.tivo.tws.nextgen.triocore.TrioUtil.jsonToTrio(TrioUtil.java:391)
+	at com.tivo.inceptionutils.dao.ServiceDao.call(ServiceDao.java:68)
+	at com.tivo.inceptionutils.service.DynconfigRegistryUtils.registerAlert(DynconfigRegistryUtils.java:200)
+	at com.tivo.connectedbodies.anonymizer.service.RegisterDynconfigObjects.registerAlerts(RegisterDynconfigObjects.java:223)
+	at com.tivo.connectedbodies.anonymizer.service.RegisterDynconfigObjects.register(RegisterDynconfigObjects.java:91)
+	at com.tivo.connectedbodies.anonymizer.init.MainApplication.main(MainApplication.java:66)

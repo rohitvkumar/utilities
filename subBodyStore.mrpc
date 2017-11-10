@@ -1,0 +1,15 @@
+MRPC/2 370 174
+BodyId: int:05000298159E1B50
+Content-Type: application/json
+RequestType: iftttSubscribedBodyStore
+ResponseCount: single
+RpcId: 1898242
+SchemaVersion: 22
+Type: request
+X-Middlemind-Host: 172.30.44.172
+X-Middlemind-PartnerId: 4922
+X-Middlemind-ReferenceId:
+X-Middlemind-RequestId: 127.0.0.1-mmweb-11357-35-122-1495169271
+X-Middlemind-Source: mmweb-11357-35
+
+{"bodyId": "int:05000298159E1B50", "createDate": "2017-05-19 04:47:50", "customerId": "int:050002688F028D15", "partnerId": "tivo:pt.3755", "type": "iftttSubscribedBodyStore"}

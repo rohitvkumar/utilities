@@ -1,0 +1,24 @@
+MRPC/2 650 1813
+AccountId: 0014015294
+BodyId: tsn:8F90001901E27FA
+Content-Type: application/json
+HardwarePlatform: tivo_stb
+RequestType: bodyDataObjectLog
+ResponseCount: single
+ReturnReceipt: true
+RpcId: 44041
+SchemaVersion: 26
+Type: request
+X-DestinationBodyId: svr:middlemind
+X-Hop: 0
+X-Middlemind-Host: 10.100.198.104
+X-Middlemind-PartnerId: 3095
+X-Middlemind-ReferenceId:
+X-Middlemind-RequestId: 10.100.198.104-anon:0000076945-450-1497048403
+X-Middlemind-Source: anon:0000076945
+X-SenderBodyId: tsn:8F90001901E27FA
+X-applicationName: Unknown Application
+X-applicationSessionId: tsn:8F90001901E27FA:0
+X-applicationVersion: Unknown Version
+
+{"bodyId": "tsn:8F90001901E27FA", "loggedObjects": [{"cookie": "0D6348B0", "object": {"actualEndTime": "2017-06-10 00:28:00", "actualStartTime": "2017-06-09 22:47:00", "bodyId": "tsn:8F90001901E27FA", "cc": true, "channel": {"bitrate": "2557921460224", "callSign": "ENCFAM-W", "channelId": "tivo:ch.9", "channelNumber": "229", "isReceived": true, "logoIndex": 66435, "sourceType": "cable", "stationId": "tivo:st.2469", "type": "channel", "videoResolution": "sd"}, "cloudMirrorEnabled": false, "collectionId": "tivo:cl.330050551", "collectionTitle": "FRIEND", "collectionType": "movie", "contentId": "tivo:ct.330047299", "deletionPolicy": "whenSpaceNeeded", "diskPartition": "user", "duration": 5940, "episodic": false, "internalRating": [{"ratingTypeId": "tivo:rt.6", "ratingValueId": "tivo:rv.4", "type": "internalRating"}], "isAdult": false, "isEpisode": true, "isNew": false, "movieYear": 2015, "mpaaRating": "pg", "offerId": "tivo:of.ctd.2469.229.cable.2017-06-09-22-48-00.5940", "originalAirdate": "2016-02-02", "partnerCollectionId": "MV0330050551-0330047299", "recordingId": "tivo:rc.1924579", "remindUser": false, "requestedEndPadding": 60, "requestedEndTime": "2017-06-10 00:27:00", "requestedStartPadding": 60, "requestedStartTime": "2017-06-09 22:48:00", "scheduledEndTime": "2017-06-10 00:28:00", "scheduledStartTime": "2017-06-09 22:47:00", "startTime": "2017-06-09 22:48:00", "state": "scheduled", "subscriptionIdentifier": [{"subscriptionId": "tivo:sb.1593579", "subscriptionType": "wishList", "type": "subscriptionIdentifier"}], "suggestionScore": 0, "title": "Molly Moon and the Incredible Book of Hypnotism", "transportType": "stream", "type": "recording", "videoResolution": "sd", "watchedTime": 0}, "objectIdAndType": "509073885584867", "type": "bodyDataObject"}], "type": "bodyDataObjectLog"}

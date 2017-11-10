@@ -1,0 +1,13 @@
+{"bodyId": "tsn:149703584300000", "capabilities": {"features": ["middlemind",
+"promptToExtendLive", "overlapProtection", "middlemind-xmppActions",
+"middlemindRouteBack"], "type": "bodyCapabilities"}, "hasScheduler": "true",
+"locale": {"language": "en", "region": "US", "type": "mindLocale"},
+"observesDaylightSaving": "true", "parentalControlsState": "off", "postalCode":
+"00000", "recordingSettings": {"clipOverlapping": "true",
+"defaultConsumptionSourceFilter": "all", "defaultCostFilter": "free",
+"promptToExtendLive": "true", "type": "recordingSettings"}, "secondsFromGmt":
+"-28800", "softwareVersion": "b-tcdclient-quattro-3-14/2017.05.16-2140",
+"state": "active", "supportedEncodingType": ["avcL41MP4", "vc1ApL3",
+"mpeg2ProgramStream", "mpeg2TransportStream"], "timeZoneName": "Atlanta",
+"type": "bodyConfigStore", "userDiskSize": "1351680", "userDiskUsed":
+"1351680"}

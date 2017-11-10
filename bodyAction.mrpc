@@ -1,0 +1,15 @@
+MRPC/2 369 193
+BodyId: int:0500012CB03D2F34
+Content-Type: application/json
+RequestType: iftttBodyAction
+ResponseCount: single
+RpcId: 1256021
+SchemaVersion: 22
+Type: request
+X-Middlemind-Host: 192.168.141.71
+X-Middlemind-PartnerId: 4922
+X-Middlemind-ReferenceId:
+X-Middlemind-RequestId: 192.168.141.71-mmweb-13922-150-464-1502901804
+X-Middlemind-Source: mmweb-13922-150
+
+{"actionData": {"enterPaused": true, "type": "iftttPauseAction"}, "bodyId": "int:0500012CB03D2F34", "customerId": "int:050001349024A4A7", "partnerId": "tivo:pt.3095", "type": "iftttBodyAction"}
