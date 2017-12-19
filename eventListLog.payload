@@ -1,1 +1,16 @@
-{"event": [{"bodyId": "tsn:B5502000001457F", "deviceType": "stb", "programPosition": "1470331607000", "sequenceNumber": "72", "source": "onDemand", "timestampMilliseconds": "1470331607000", "type": "deepLinkViewEvent", "what": {"contentId": "tivo:ct.18574923", "offerId": "tivo:of.ts.44150743", "partnerId": "tivo:pt.4547", "type": "viewOnDemand"}}, {"appUri": "web:https://www.youtube.com/tv", "bodyId": "tsn:B5502000001457F", "sequenceNumber": "73", "timestampMilliseconds": "1470331609000", "type": "appLaunchEvent"}, {"appUri": "web:https://www.youtube.com/tv", "bodyId": "tsn:B5502000001457F", "sequenceNumber": "74", "timestampMilliseconds": "1470332048000", "type": "appTerminateEvent"}], "type": "eventListLog"}
+{
+    "event" : [
+        {
+            "bodyId" : "tsn:BF501100000101D",
+            "timestampMilliseconds" : "1514000000000",
+             "idSetSource" : {
+             "collectionId" : "tivo:cl.10034778",
+             "consumptionSource" : "linear",
+             "type" : "seasonPassSource"
+             },
+            "subscriptionId" : "tivo:sb.15000043",
+            "type" : "cloudOnePassCreateEvent"
+        }
+    ],
+    "type" : "eventListLog"
+}

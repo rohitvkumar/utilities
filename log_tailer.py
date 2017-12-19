@@ -29,32 +29,39 @@ def list_topics(client, name):
         total = 0
         for tp in tps:
             total += end_tpts[tp] - start_tpts[tp]
-            print("Partition{0} - Start:{1} End:{2}".format(tp.partition, start_tpts[tp], end_tpts[tp]))
+            print("Partition:{0} - Start:{1} End:{2}".format(tp.partition, start_tpts[tp], end_tpts[tp]))
         print("Total messages: {}".format(total))
                         
 def read_topic(consumer,
                key_filter,
                message_filter,
+               message_filter_exclusion,
                print_key,
                print_meta,
                print_ts,
                suppress,
                date_filter,
                rule,
+               exit_at_end,
                total=None):
     rules = {'all':all, 'any':any}
     if verbose:
         print("Launching loop to read the messages.")
     counter = 0
     for message in consumer:
-        if total == counter:
+        if exit_at_end and total == counter:
             break
         counter += 1
-        print ("Read {0} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
+        #print ("Read {0} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
         if key_filter:
             if not message.key:
                 continue
             if not rules[rule](x in message.key for x in key_filter):
+                continue
+        if message_filter_exclusion:
+            if not message.value:
+                continue
+            if rules[rule](x in message.value for x in message_filter_exclusion):
                 continue
         if message_filter:
             if not message.value:
@@ -75,7 +82,7 @@ def read_topic(consumer,
             print ("")
         else:
             print (message.value)
-            print ("")
+            #print ("")
         
         
 def wait_for_threads():
@@ -97,6 +104,7 @@ def main():
     parser.add_argument("-t", "--topic", help="Topic name", metavar="NAME")
     parser.add_argument("-k", "--key-filter", help="Filter term for key", metavar="TERM", action="append")
     parser.add_argument("-m", "--message-filter", help="Filter term for message", metavar="TERM", action="append")
+    parser.add_argument("-x", "--message-filter-exclude", help="Filter term for message exclusion", metavar="TERM", action="append")
     parser.add_argument("-L", "--list", help="List topic(s)", action="store_true")
     parser.add_argument("-o", "--offset", help="Offset to read from", choices=['beginning', 'end'], default='end')
     parser.add_argument("-O", "--time-offset", help="How back in time to read from", choices=['1d', '2d', '4d', '1w', '2w', '1m'])
@@ -169,18 +177,29 @@ def main():
             print('Total records to consume: ', total, file=sys.stderr)
         elif args.offset == 'end':
             client.seek_to_end()
+            total = 0
         else:
             client.seek_to_beginning()
+            beg_tpts = client.beginning_offsets(tps)
+            end_tpts = client.end_offsets(tps)
+            total = 0
+            for tp in tps:
+                start_offset = beg_tpts[tp]
+                total += end_tpts[tp] - start_offset
+                client.seek(tp, start_offset)
+            print('Total records to consume: ', total, file=sys.stderr)
         
         read_topic(client,
                    args.key_filter,
                    args.message_filter,
+                   args.message_filter_exclude,
                    args.Key,
                    args.Metadata,
                    args.Timestamp,
                    args.Suppress,
                    args.Date_filter,
                    args.rule,
+                   args.exit_at_end,
                    int(total))
     except KeyboardInterrupt as e:
         print ("Stopped", file=sys.stderr)

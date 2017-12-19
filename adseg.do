@@ -4,4 +4,4 @@ ObjectId: int:050001D83B8CFFF9
 ObjectType: adSegmentEnterEvent
 AccountId: int:050001349024A4A7
 
-{"bodyId":"int:050001D83B8CFFF9","sequenceNumber":301,"timestampMilliseconds":"1510087313000","type":"adSegmentEnterEvent"}
+{"bodyId":"int:050001D83B8CFFF9","sequenceNumber":301,"timestampMilliseconds":"1546292570000","type":"adSegmentEnterEvent"}

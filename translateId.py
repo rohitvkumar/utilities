@@ -50,15 +50,14 @@ def main():
     
     args = parser.parse_args()
     
+    print args
+    
     if args.external:
         print external_to_internal(args.external.strip('",'))
         
     if args.internal:
-        pcid = internal_to_external(args.internal.strip('",'))
-        print json.dumps(fe_account_search(args.partner_id.strip('",'), pcid), indent=2)
+        print internal_to_external(args.internal.strip('",'))
+        #print json.dumps(fe_account_search(args.partner_id.strip('",'), pcid), indent=2)
         
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        sys.exit()
+    main()
