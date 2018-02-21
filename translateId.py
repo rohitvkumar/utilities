@@ -40,13 +40,23 @@ def fe_account_search(pid, pcid):
     
     return result.json()
 
+def fe_mso_search(bodyId):
+    url = "http://pdk15.sj.tivo.com:8085/mind/mind22?type=feDeviceMsoServiceIdGet&bodyId={bId}".format(bId=bodyId)
+    print url
+    headers = {'accept': 'application/json'}
+    result = requests.get(url, headers=headers)
+    result.raise_for_status()
+    
+    return result.json()
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Read the latest messages from a kinesis stream shard")
+    parser = argparse.ArgumentParser(description="Translate Ids.")
     
     parser.add_argument("-e", "--external", help="External Id.")
     parser.add_argument("-i", "--internal", help="Internal Id.")
     parser.add_argument("-p", "--partner-id", help="Partner Id.")
+    parser.add_argument("-f", "--internal-ids", help="Internal Ids.")
     
     args = parser.parse_args()
     
@@ -56,8 +66,16 @@ def main():
         print external_to_internal(args.external.strip('",'))
         
     if args.internal:
-        print internal_to_external(args.internal.strip('",'))
-        #print json.dumps(fe_account_search(args.partner_id.strip('",'), pcid), indent=2)
+        externalId = internal_to_external(args.internal.strip('",\n'))
+        print json.dumps(fe_mso_search(externalId), indent=2)
+        print ""
+        
+    if args.internal_ids:
+        with open(args.internal_ids) as inp:
+            for line in inp:
+                externalId = internal_to_external(line.strip())
+                print json.dumps(fe_mso_search(externalId), indent=2)
+                print ""
         
 if __name__ == "__main__":
     main()

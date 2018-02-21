@@ -52,7 +52,7 @@ def read_topic(consumer,
         if exit_at_end and total == counter:
             break
         counter += 1
-        #print ("Read {0} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
+        print ("Read {0} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
         if key_filter:
             if not message.key:
                 continue
@@ -82,7 +82,7 @@ def read_topic(consumer,
             print ("")
         else:
             print (message.value)
-            #print ("")
+            print ("")
         
         
 def wait_for_threads():
@@ -93,6 +93,28 @@ def wait_for_threads():
         seconds += 1
         if seconds == 10:
             sys.exit(0)
+
+def time_tag_to_ms(off):
+    offtime_ms = 3600 * 1000 # Set it to 1h by default
+    if off == '1h':
+        offtime_ms *= 1
+    if off == '4h':
+        offtime_ms *= 4
+    if off == '12h':
+        offtime_ms *= 12
+    if off == '1d':
+        offtime_ms *= (1 * 24)
+    if off == '2d':
+        offtime_ms *= (2 * 24)
+    if off == '4d':
+        offtime_ms *= (4 * 24)
+    if off == '1w':
+        offtime_ms *= (7 * 24)
+    if off == '2w':
+        offtime_ms *= (14 * 24)
+    if off == '1m':
+        offtime_ms *= (30 * 24)
+    return offtime_ms
 
 def main():
     parser = argparse.ArgumentParser(description="Add/remove containers to server.")
@@ -107,7 +129,8 @@ def main():
     parser.add_argument("-x", "--message-filter-exclude", help="Filter term for message exclusion", metavar="TERM", action="append")
     parser.add_argument("-L", "--list", help="List topic(s)", action="store_true")
     parser.add_argument("-o", "--offset", help="Offset to read from", choices=['beginning', 'end'], default='end')
-    parser.add_argument("-O", "--time-offset", help="How back in time to read from", choices=['1d', '2d', '4d', '1w', '2w', '1m'])
+    parser.add_argument("-O", "--time-offset", help="How back in time to read from", choices=['1h', '4h', '12h', '1d', '2d', '4d', '1w', '2w', '1m'])
+    parser.add_argument("-H", "--time-offset-hrs", help="How back in time in hours to read from", type=int)    
     parser.add_argument("-M", "--Metadata", help="Include metadata about the message", action="store_true")
     parser.add_argument("-K", "--Key", help="Include message key", action="store_true")
     parser.add_argument("-e", "--exit-at-end", help="Quit when no new messages read in 5 seconds.", action="store_true")
@@ -115,6 +138,8 @@ def main():
     parser.add_argument("-T", "--Timestamp", help="Print the message timestamp", action="store_true")
     parser.add_argument("-D", "--Date-filter", help="Filter message based on time", metavar="YYYY-MM-DD", action="append")
     parser.add_argument("-S", "--Suppress", help="Print only metadata", action="store_true")
+    parser.add_argument("-I", "--Items-count", help="Only print the count of items.", action="store_true")
+    parser.add_argument("-C", "--num-to-read", help="Only read this many messages.", type=int)
     
     args = parser.parse_args()
     
@@ -148,20 +173,11 @@ def main():
         tps = [TopicPartition(args.topic, p) for p in partitions]
         client.assign(tps)
         total = None
-        if args.time_offset:
-            offtime_ms = 24 * 3600 * 1000 # Set it to 1d by default
-            off = args.time_offset
-            if off == '2d':
-                offtime_ms *= 2
-            if off == '4d':
-                offtime_ms *= 4
-            if off == '1w':
-                offtime_ms *= 7
-            if off == '2w':
-                offtime_ms *= 14
-            if off == '1m':
-                offtime_ms *= 30
-            
+        if args.time_offset or args.time_offset_hrs:
+            if args.time_offset:
+                offtime_ms = time_tag_to_ms(args.time_offset)
+            else:
+                offtime_ms = args.time_offset_hrs * 3600 * 1000
             currtime_ms = int(time.time() * 1000)
             timestamps = {}
             for tp in tps:
@@ -174,7 +190,8 @@ def main():
                 start_offset = time_tpts[tp].offset if time_tpts[tp] and time_tpts[tp].offset else beg_tpts[tp]
                 total += end_tpts[tp] - start_offset
                 client.seek(tp, start_offset)
-            print('Total records to consume: ', total, file=sys.stderr)
+            if args.num_to_read:
+                total = args.num_to_read
         elif args.offset == 'end':
             client.seek_to_end()
             total = 0
@@ -187,7 +204,11 @@ def main():
                 start_offset = beg_tpts[tp]
                 total += end_tpts[tp] - start_offset
                 client.seek(tp, start_offset)
-            print('Total records to consume: ', total, file=sys.stderr)
+                
+        print('Total records to consume: ', total, file=sys.stderr)
+            
+        if (args.Items_count):
+            sys.exit(0)
         
         read_topic(client,
                    args.key_filter,

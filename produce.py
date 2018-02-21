@@ -4,6 +4,7 @@ import argparse
 import atexit
 import os
 from kafka import KafkaProducer
+from kafka.errors import KafkaError
 import sys
 import traceback
 import time
@@ -20,6 +21,13 @@ def wait_for_threads():
         seconds += 1
         if seconds == 10:
             sys.exit(0)
+            
+def djb2a_hash(Key):
+    hash = 5381
+    mask = 0xffffffff
+    for c in Key:
+        hash = (((hash * 33) & mask) + ord(c)) & mask
+    return hash
 
 def main():
     parser = argparse.ArgumentParser(description="Add/remove containers to server.")
@@ -31,6 +39,7 @@ def main():
     parser.add_argument("-t", "--topic", help="Topic name", metavar="NAME", required=True)
     parser.add_argument("-k", "--key", help="Message key", metavar="TERM", default=None)
     parser.add_argument("-d", "--domain", help="Key delimiter", action="store_true")
+    parser.add_argument("-M", "--middlemind-hash", help="Use middlemind hash for partition", action="store_true")
     parser.add_argument("-m", "--message", help="Message", metavar="TERM")
     parser.add_argument("-f", "--message-file", help="Message payload")
     parser.add_argument("-P", "--partition", help="Partition to post message", default=None)
@@ -78,10 +87,27 @@ def main():
                 print "Msg: ", msg
             
         producer = KafkaProducer(bootstrap_servers=bootstrap)
+        partition = args.partition
         if verbose:
             print producer.partitions_for(args.topic)
-        producer.send(args.topic, value=msg, key=args.key, partition=args.partition)
-        producer.flush()
+        if args.middlemind_hash:
+            partition_count = len(producer.partitions_for(args.topic))
+            partition = djb2a_hash(args.key) % partition_count
+        
+        if simulated:
+            print "Producing message topic {}, key {}, partition {}".format(args.topic, args.key, partition)
+        else:
+            future = producer.send(args.topic, value=msg, key=args.key, partition=partition)
+            producer.flush()
+            record_metadata = None
+            try:
+                record_metadata = future.get(timeout=10)
+            except KafkaError:
+                print "Error: {}".format(record_metadata)
+                pass
+            else:
+                print "Message produced to p:{} o:{}".format(record_metadata.partition, record_metadata.offset)
+            
         
     except KeyboardInterrupt as e:
         print "Stopped"
