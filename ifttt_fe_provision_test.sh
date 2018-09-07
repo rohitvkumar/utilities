@@ -18,3 +18,7 @@ partnerCustomerId=$(echo $resp | jq '.partnerCustomerId' | sed -e 's/^"//' -e 's
 set -x
 curl "http://$2.tivo.com:8085/mind/mind22?type=feAccountFeDeviceSearch&partnerId=$partnerId&partnerCustomerId=$partnerCustomerId" -H "Accept:application/json" -s | jq '.'
 set +x
+
+set -x
+curl "http://$2.tivo.com:8085/mind/mind22?type=serviceGroupSearch&bodyId=$1" -H "Accept:application/json" -s | jq '.'
+set +x

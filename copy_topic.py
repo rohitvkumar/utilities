@@ -25,13 +25,14 @@ def wait_for_threads():
 def main():
     parser = argparse.ArgumentParser(description="Add/remove containers to server.")
     
-    parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
-    parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
-    parser.add_argument("-F", "--from-broker", help="Kafka bootstrap broker source", metavar="hostname", required=True)
-    parser.add_argument("-T", "--to-broker", help="Kafka bootstrap broker destination", metavar="hostname")
-    parser.add_argument("-P", "--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
     parser.add_argument("-f", "--from-topic", help="Topic name", metavar="NAME", required=True)
+    parser.add_argument("-F", "--from-broker", help="Kafka bootstrap broker source", metavar="hostname", required=True)
+    parser.add_argument("-P", "--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
+    parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
+    parser.add_argument("-S", "--offset", help="Copy all data or most recent", choices=['beginning', 'end'], default = 'beginning')
     parser.add_argument("-t", "--to-topic", help="Topic name", metavar="NAME", required=True)
+    parser.add_argument("-T", "--to-broker", help="Kafka bootstrap broker destination", metavar="hostname")
+    parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
     
     args = parser.parse_args()
     
@@ -52,7 +53,7 @@ def main():
     try:
         consumer = KafkaConsumer(args.from_topic,
                                  bootstrap_servers=bootstrap_src,
-                                 auto_offset_reset='earliest',
+                                 auto_offset_reset='earliest' if args.offset=='beginning' else 'latest',
                                  enable_auto_commit=False,
                                  consumer_timeout_ms=5*60*1000,
                                  api_version=(0,10))         

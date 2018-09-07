@@ -11,7 +11,7 @@ def external_to_internal(id):
         "externalId": id
     }
     
-    url = "http://anonymizer.tec1.tivo.com/anonymizerExternalIdTranslate"
+    url = "http://anonymizer.tpc1.tivo.com/anonymizerExternalIdTranslate"
         
     result = requests.post(url, json=req)
     result.raise_for_status()
@@ -63,6 +63,9 @@ def main():
     print args
     
     if args.external:
+        if args.external.startswith("tsn:"):
+            args.external = args.external.replace("-", "")
+        print args.external
         print external_to_internal(args.external.strip('",'))
         
     if args.internal:

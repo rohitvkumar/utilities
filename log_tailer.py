@@ -43,16 +43,20 @@ def read_topic(consumer,
                date_filter,
                rule,
                exit_at_end,
-               total=None):
+               count_only,
+               total):
     rules = {'all':all, 'any':any}
     if verbose:
         print("Launching loop to read the messages.")
     counter = 0
+    tot_msgs = 0
+    msg_offset = -1
     for message in consumer:
         if exit_at_end and total == counter:
             break
         counter += 1
-        print ("Read {0} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
+        if verbose:
+            print ("Read {:,} messages {:,} offset.".format(counter, message.offset).rjust(200), end='\r', file=sys.stderr)
         if key_filter:
             if not message.key:
                 continue
@@ -77,12 +81,18 @@ def read_topic(consumer,
         if print_key:
             print ('{}+'.format(message.key), end="")
         if print_ts:
-            print ('{}+'.format(time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime(message.timestamp / 1000))), end="")
+            print ('{}:{}+'.format(message.timestamp, time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime(message.timestamp / 1000))), end="")
         if suppress:
             print ("")
         else:
-            print (message.value)
-            print ("")
+            if count_only:
+                tot_msgs += 1
+            else:
+                if message.value:
+                    print (message.value)
+            # print ("")
+    if count_only:
+        print("Total message read: {0}".format(tot_msgs))
         
         
 def wait_for_threads():
@@ -95,7 +105,7 @@ def wait_for_threads():
             sys.exit(0)
 
 def time_tag_to_ms(off):
-    offtime_ms = 3600 * 1000 # Set it to 1h by default
+    offtime_ms = 3600 * 1000  # Set it to 1h by default
     if off == '1h':
         offtime_ms *= 1
     if off == '4h':
@@ -119,27 +129,29 @@ def time_tag_to_ms(off):
 def main():
     parser = argparse.ArgumentParser(description="Add/remove containers to server.")
     
-    parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
-    parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
     parser.add_argument("-b", "--broker", help="Kafka bootstrap broker", metavar="hostname", required=True)
-    parser.add_argument("-p", "--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
-    parser.add_argument("-t", "--topic", help="Topic name", metavar="NAME")
+    parser.add_argument("-c", "--num-to-read", help="Only read this many messages.", type=int)
+    parser.add_argument("-D", "--Date-filter", help="Filter message based on time", metavar="YYYY-MM-DD", action="append")
+    parser.add_argument("-e", "--exit-at-end", help="Quit when no new messages read in 5 seconds.", action="store_true")
+    parser.add_argument("-H", "--time-offset-hrs", help="How back in time in hours to read from", type=int)
+    parser.add_argument("-i", "--time-offset-mins", help="How back in time in mins to read from", type=int)
+    parser.add_argument("-j", "--Items-count", help="Only print the count of items.", action="store_true")
     parser.add_argument("-k", "--key-filter", help="Filter term for key", metavar="TERM", action="append")
-    parser.add_argument("-m", "--message-filter", help="Filter term for message", metavar="TERM", action="append")
-    parser.add_argument("-x", "--message-filter-exclude", help="Filter term for message exclusion", metavar="TERM", action="append")
+    parser.add_argument("-K", "--Key", help="Include message key", action="store_true")
     parser.add_argument("-L", "--list", help="List topic(s)", action="store_true")
+    parser.add_argument("-m", "--message-filter", help="Filter term for message", metavar="TERM", action="append")
+    parser.add_argument("-M", "--Metadata", help="Include metadata about the message", action="store_true")
+    parser.add_argument("-N", "--count-only", help="Only count the number of messages.", action="store_true")
     parser.add_argument("-o", "--offset", help="Offset to read from", choices=['beginning', 'end'], default='end')
     parser.add_argument("-O", "--time-offset", help="How back in time to read from", choices=['1h', '4h', '12h', '1d', '2d', '4d', '1w', '2w', '1m'])
-    parser.add_argument("-H", "--time-offset-hrs", help="How back in time in hours to read from", type=int)    
-    parser.add_argument("-M", "--Metadata", help="Include metadata about the message", action="store_true")
-    parser.add_argument("-K", "--Key", help="Include message key", action="store_true")
-    parser.add_argument("-e", "--exit-at-end", help="Quit when no new messages read in 5 seconds.", action="store_true")
+    parser.add_argument("-p", "--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
     parser.add_argument("-r", "--rule", help="Match all or any", choices=['all', 'any'], default='all')
-    parser.add_argument("-T", "--Timestamp", help="Print the message timestamp", action="store_true")
-    parser.add_argument("-D", "--Date-filter", help="Filter message based on time", metavar="YYYY-MM-DD", action="append")
+    parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
     parser.add_argument("-S", "--Suppress", help="Print only metadata", action="store_true")
-    parser.add_argument("-I", "--Items-count", help="Only print the count of items.", action="store_true")
-    parser.add_argument("-C", "--num-to-read", help="Only read this many messages.", type=int)
+    parser.add_argument("-t", "--topic", help="Topic name", metavar="NAME")
+    parser.add_argument("-T", "--Timestamp", help="Print the message timestamp", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
+    parser.add_argument("-x", "--message-filter-exclude", help="Filter term for message exclusion", metavar="TERM", action="append")
     
     args = parser.parse_args()
     
@@ -173,11 +185,13 @@ def main():
         tps = [TopicPartition(args.topic, p) for p in partitions]
         client.assign(tps)
         total = None
-        if args.time_offset or args.time_offset_hrs:
+        if args.time_offset or args.time_offset_hrs or args.time_offset_mins:
             if args.time_offset:
                 offtime_ms = time_tag_to_ms(args.time_offset)
-            else:
+            if args.time_offset_hrs:
                 offtime_ms = args.time_offset_hrs * 3600 * 1000
+            if args.time_offset_mins:
+                offtime_ms = args.time_offset_mins * 60 * 1000
             currtime_ms = int(time.time() * 1000)
             timestamps = {}
             for tp in tps:
@@ -190,8 +204,6 @@ def main():
                 start_offset = time_tpts[tp].offset if time_tpts[tp] and time_tpts[tp].offset else beg_tpts[tp]
                 total += end_tpts[tp] - start_offset
                 client.seek(tp, start_offset)
-            if args.num_to_read:
-                total = args.num_to_read
         elif args.offset == 'end':
             client.seek_to_end()
             total = 0
@@ -205,7 +217,10 @@ def main():
                 total += end_tpts[tp] - start_offset
                 client.seek(tp, start_offset)
                 
-        print('Total records to consume: ', total, file=sys.stderr)
+        if args.num_to_read:
+            total = args.num_to_read
+                
+        print('Total records to consume: {:,}'.format(total), file=sys.stderr)
             
         if (args.Items_count):
             sys.exit(0)
@@ -221,6 +236,7 @@ def main():
                    args.Date_filter,
                    args.rule,
                    args.exit_at_end,
+                   args.count_only,
                    int(total))
     except KeyboardInterrupt as e:
         print ("Stopped", file=sys.stderr)
