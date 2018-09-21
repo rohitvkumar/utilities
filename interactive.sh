@@ -10,6 +10,10 @@ docker run  -it --rm --entrypoint sh \
             --env ENVIRONMENT_NAME=rohit  \
             --env REGION_NAME=tivo \
             --env DEV_LOG_SINK=CONSOLE \
-            -v /TivoData/containers/logs/$CONTAINER:/TivoData/Log \
-            -v /TivoData/containers/data/$CONTAINER:/TivoData/$CONTAINER \
-            docker.$DC.tivo.com/rvalsakumar/$CONTAINER
+            --env KAFKA_ENDPOINT=kafka.$DC.tivo.com:9092 \
+            --env ZOOKEEPER_ENDPOINT=zookeeper.$DC.tivo.com:2181 \
+            --env DYNCONFIG_HOST=dynconfig.$DC.tivo.com \
+            --env ANONYMIZER_HOST=anonymizer.$DC.tivo.com \
+            -v /tmp/logs/$CONTAINER:/TivoData/Log \
+            -v /tmp/data/$CONTAINER:/TivoData/$CONTAINER \
+            docker.tivo.com/rvalsakumar/$CONTAINER
