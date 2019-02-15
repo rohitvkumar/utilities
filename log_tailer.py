@@ -43,20 +43,29 @@ def read_topic(consumer,
                date_filter,
                rule,
                exit_at_end,
+               end_offsets,
                count_only,
-               total):
+               partition):    
     rules = {'all':all, 'any':any}
     if verbose:
         print("Launching loop to read the messages.")
+        print(end_offsets)
     counter = 0
     tot_msgs = 0
     msg_offset = -1
     for message in consumer:
-        if exit_at_end and total == counter:
-            break
+        if exit_at_end:
+            if message.partition in end_offsets:
+                if (message.offset > end_offsets[message.partition]):
+                    print("Done with partition", message.partition)
+                    end_offsets.pop(message.partition, None)
+                if not end_offsets:
+                    break
+            else:
+                continue
         counter += 1
         if verbose:
-            print ("Read {:,} messages {:,} offset.".format(counter, message.offset).rjust(200), end='\r', file=sys.stderr)
+            print ("Read {:,} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
         if key_filter:
             if not message.key:
                 continue
@@ -145,6 +154,7 @@ def main():
     parser.add_argument("-o", "--offset", help="Offset to read from", choices=['beginning', 'end'], default='end')
     parser.add_argument("-O", "--time-offset", help="How back in time to read from", choices=['1h', '4h', '12h', '1d', '2d', '4d', '1w', '2w', '1m'])
     parser.add_argument("-p", "--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
+    parser.add_argument("-P", "--partition", help="Topic partition to consume from", metavar="partition", type=int)
     parser.add_argument("-r", "--rule", help="Match all or any", choices=['all', 'any'], default='all')
     parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
     parser.add_argument("-S", "--Suppress", help="Print only metadata", action="store_true")
@@ -167,7 +177,7 @@ def main():
     bootstrap = ['{0}:{1}'.format(args.broker, args.port)]
     
     try:
-        timeout_ms = 15000 if args.exit_at_end else float('inf')
+        timeout_ms = 30*1000
         client = KafkaConsumer(
                          enable_auto_commit=False,
                          auto_offset_reset='earliest',
@@ -181,9 +191,17 @@ def main():
         if not args.topic:
             parser.error("A topic name is required.")
         
-        partitions = client.partitions_for_topic(args.topic)
-        tps = [TopicPartition(args.topic, p) for p in partitions]
+        if args.partition:
+            tps = [TopicPartition(args.topic, args.partition)]
+        else:
+            partitions = client.partitions_for_topic(args.topic)
+            tps = [TopicPartition(args.topic, p) for p in partitions]
         client.assign(tps)
+        beg_tpts = client.beginning_offsets(tps)
+        end_tpts = client.end_offsets(tps)
+        end_offsets = {}
+        for tp in tps:
+            end_offsets[tp.partition] = end_tpts[tp]
         total = None
         if args.time_offset or args.time_offset_hrs or args.time_offset_mins:
             if args.time_offset:
@@ -197,8 +215,6 @@ def main():
             for tp in tps:
                 timestamps[tp] = currtime_ms - offtime_ms
             time_tpts = client.offsets_for_times(timestamps)
-            beg_tpts = client.beginning_offsets(tps)
-            end_tpts = client.end_offsets(tps)
             total = 0
             for tp in time_tpts:
                 start_offset = time_tpts[tp].offset if time_tpts[tp] and time_tpts[tp].offset else beg_tpts[tp]
@@ -209,8 +225,6 @@ def main():
             total = 0
         else:
             client.seek_to_beginning()
-            beg_tpts = client.beginning_offsets(tps)
-            end_tpts = client.end_offsets(tps)
             total = 0
             for tp in tps:
                 start_offset = beg_tpts[tp]
@@ -220,24 +234,26 @@ def main():
         if args.num_to_read:
             total = args.num_to_read
                 
-        print('Total records to consume: {:,}'.format(total), file=sys.stderr)
+        print('Difference between start and end offsets: {:,}'.format(total), file=sys.stderr)
             
         if (args.Items_count):
             sys.exit(0)
         
-        read_topic(client,
-                   args.key_filter,
-                   args.message_filter,
-                   args.message_filter_exclude,
-                   args.Key,
-                   args.Metadata,
-                   args.Timestamp,
-                   args.Suppress,
-                   args.Date_filter,
-                   args.rule,
-                   args.exit_at_end,
-                   args.count_only,
-                   int(total))
+        while end_offsets:
+            read_topic(client,
+                       args.key_filter,
+                       args.message_filter,
+                       args.message_filter_exclude,
+                       args.Key,
+                       args.Metadata,
+                       args.Timestamp,
+                       args.Suppress,
+                       args.Date_filter,
+                       args.rule,
+                       args.exit_at_end,
+                       end_offsets,
+                       args.count_only,
+                       args.partition)
     except KeyboardInterrupt as e:
         print ("Stopped", file=sys.stderr)
         client.close()
