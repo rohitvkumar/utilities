@@ -4,7 +4,7 @@ from __future__ import print_function
 import argparse
 import atexit
 import os
-from confluent_kafka import Consumer, KafkaError, TopicPartition
+from confluent_kafka import Consumer, KafkaError, TopicPartition,  OFFSET_BEGINNING,  OFFSET_END
 import sys
 import traceback
 import time
@@ -75,8 +75,7 @@ def read_topic(client,
                exit_at_end,
                end_offsets,
                count_only,
-               tps,
-               num_to_read):    
+               tps):    
     rules = {'all':all, 'any':any}
     counter = 0
     tot_msgs = 0
@@ -102,7 +101,7 @@ def read_topic(client,
             if exit_at_end:
                 if message.partition() in end_offsets:
                     if ((message.offset() + 1) >= end_offsets[message.partition()]):
-                        print("part: {} end: {}, curr {}".format(message.partition(), end_offsets[message.partition()], message.offset()))
+                        #print("part: {} end: {}, curr {}".format(message.partition(), end_offsets[message.partition()], message.offset()))
                         end_offsets.pop(message.partition(), None)
                 else:
                     continue
@@ -110,10 +109,6 @@ def read_topic(client,
             if verbose:
                 print ("Read {:,} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
             
-            if num_to_read:
-                if counter > num_to_read:
-                    end_offsets = {}
-                    break
             if key_filter:
                 if not message.key():
                     continue
@@ -165,58 +160,33 @@ def wait_for_threads():
         if seconds == 10:
             sys.exit(0)
 
-
-def time_tag_to_ms(off):
-    offtime_ms = 3600 * 1000  # Set it to 1h by default
-    if off == '1h':
-        offtime_ms *= 1
-    if off == '4h':
-        offtime_ms *= 4
-    if off == '12h':
-        offtime_ms *= 12
-    if off == '1d':
-        offtime_ms *= (1 * 24)
-    if off == '2d':
-        offtime_ms *= (2 * 24)
-    if off == '4d':
-        offtime_ms *= (4 * 24)
-    if off == '1w':
-        offtime_ms *= (7 * 24)
-    if off == '2w':
-        offtime_ms *= (14 * 24)
-    if off == '1m':
-        offtime_ms *= (30 * 24)
-    return offtime_ms
-
-
 def main():
     parser = argparse.ArgumentParser(description="Add/remove containers to server.")
     
     parser.add_argument("-b", "--broker", help="Kafka bootstrap broker", metavar="hostname", required=True)
-    parser.add_argument("-c", "--num-to-read", help="Only read this many messages.", type=int)
-    parser.add_argument("-D", "--Date-filter", help="Filter message based on time", metavar="YYYY-MM-DD", action="append")
+    parser.add_argument("--count-only", help="Only count the number of messages.", action="store_true")
+    parser.add_argument("-d", "--Date-filter", help="Filter message based on time", metavar="YYYY-MM-DD", action="append")
     parser.add_argument("-e", "--exit-at-end", help="Quit when no new messages read in 5 seconds.", action="store_true")
     parser.add_argument("-f", "--out-file-path", help="File to store messages.")
-    parser.add_argument("-H", "--time-offset-hrs", help="How back in time in hours to read from", type=int)
-    parser.add_argument("-i", "--time-offset-mins", help="How back in time in mins to read from", type=int)
-    parser.add_argument("-j", "--Items-count", help="Only print the count of items.", action="store_true")
-    parser.add_argument("-k", "--key-filter", help="Filter term for key", metavar="TERM", action="append")
-    parser.add_argument("-K", "--Key", help="Include message key", action="store_true")
+    parser.add_argument("-i", "--time-offset-mins", help="Time offset from end in minutes", type=int)
+    parser.add_argument("-I", "--time-offset-hrs", help="Time offset from end in hours", type=int)
+    parser.add_argument("-j", "--print-offset-delta", help="Only print the count of items.", action="store_true")
+    parser.add_argument("-k", "--key-filter", help="Only show messages with this term in the key", metavar="TERM", action="append")
+    parser.add_argument("-K", "--Key", help="Print the message key", action="store_true")
     parser.add_argument("-L", "--list", help="List topic(s)", action="store_true")
-    parser.add_argument("-m", "--message-filter", help="Filter term for message", metavar="TERM", action="append")
-    parser.add_argument("-M", "--Metadata", help="Include metadata about the message", action="store_true")
-    parser.add_argument("-N", "--count-only", help="Only count the number of messages.", action="store_true")
+    parser.add_argument("-m", "--message-filter", help="Only show messages with this term in the body", metavar="TERM", action="append")
+    parser.add_argument("-M", "--Metadata", help="Print message metadata", action="store_true")
     parser.add_argument("-o", "--offset", help="Offset to read from", choices=['beginning', 'end'], default='end')
-    parser.add_argument("-O", "--time-offset", help="How back in time to read from", choices=['1h', '4h', '12h', '1d', '2d', '4d', '1w', '2w', '1m'])
-    parser.add_argument("-p", "--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
-    parser.add_argument("-P", "--partition", help="Topic partition to consume from", metavar="partition", type=int, action="append")
-    parser.add_argument("-r", "--rule", help="Match all or any", choices=['all', 'any'], default='all')
-    parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
-    parser.add_argument("-S", "--Suppress", help="Print only metadata", action="store_true")
+    parser.add_argument("-O", "--abs-offset", help="Absolute offset", type=int, default=0)
+    parser.add_argument("--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
+    parser.add_argument("-p", "--partition", help="Topic partition to consume from", metavar="partition", type=int, action="append")
+    parser.add_argument("--rule", help="Match all or any", choices=['all', 'any'], default='all')
+    parser.add_argument("--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
+    parser.add_argument("-s", "--Suppress", help="Don't print the message body", action="store_true")
     parser.add_argument("-t", "--topic", help="Topic name", metavar="NAME")
     parser.add_argument("-T", "--Timestamp", help="Print the message timestamp", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
-    parser.add_argument("-x", "--message-filter-exclude", help="Filter term for message exclusion", metavar="TERM", action="append")
+    parser.add_argument("-x", "--message-filter-exclude", help="Exclude messages with this term in the body", metavar="TERM", action="append")
     
     args = parser.parse_args()
     
@@ -250,9 +220,7 @@ def main():
         if not args.topic:
             parser.error("A topic name is required.")
             
-        if args.time_offset or args.time_offset_hrs or args.time_offset_mins:
-            if args.time_offset:
-                offtime_ms = time_tag_to_ms(args.time_offset)
+        if args.time_offset_hrs or args.time_offset_mins:
             if args.time_offset_hrs:
                 offtime_ms = args.time_offset_hrs * 3600 * 1000
             if args.time_offset_mins:
@@ -272,24 +240,41 @@ def main():
         tps = [TopicPartition(args.topic, p, initial_offset) for p in partitions]
         
         beg_offs = get_offsets_for_timestamps(client, args.topic, partitions, initial_offset)
-        end_offs = get_offsets_for_timestamps(client, args.topic, partitions, -1)
+        end_offs = get_offsets_for_timestamps(client, args.topic, partitions, OFFSET_END)
         
         total = 0
+        diff = {}
         for p in tps:
-            if beg_offs[p.partition] > -1:
+            if args.abs_offset < 0:
+                beg_offs[p.partition] = end_offs[p.partition] + args.abs_offset
+            elif args.abs_offset > 0:
+                if args.abs_offset > beg_offs[p.partition]:
+                    beg_offs[p.partition] = args.abs_offset
+            if beg_offs[p.partition] == -2:
+                p.offset = OFFSET_BEGINNING
+            elif beg_offs[p.partition] == -1:
+                p.offset = OFFSET_END
+                beg_offs[p.partition] = end_offs[p.partition]
+            elif beg_offs[p.partition] > -1:
                 p.offset = beg_offs[p.partition]
-                total += end_offs[p.partition] - beg_offs[p.partition]
+                diff[p.partition] = end_offs[p.partition] - beg_offs[p.partition]
+                total += diff[p.partition]
+            else:
+                print("Unable to process offsets.")
+                sys.exit(1)
+                
         
         if verbose:
-            print("Starting offsets: ", beg_offs)
-            print("  Ending offsets: ", end_offs)
-            
-        client.assign(tps)
+            print(" Starting offsets: ", beg_offs)
+            print("   Ending offsets: ", end_offs)
+            print("Offset difference: ", diff)
         
         print('Difference between start and end offsets: {:,}'.format(total), file=sys.stderr)
             
-        if (args.Items_count):
+        if (args.print_offset_delta):
             sys.exit(0)
+            
+        client.assign(tps)
         
         read_topic(client,
                    args.key_filter,
@@ -304,8 +289,7 @@ def main():
                    args.exit_at_end,
                    end_offs,
                    args.count_only,
-                   tps,
-                   args.num_to_read)
+                   tps)
     except KeyboardInterrupt as e:
         print ("Stopped", file=sys.stderr)
     finally:

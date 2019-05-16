@@ -1,74 +1,85 @@
 #!/usr/bin/env python
+"""
+Delete alerts from the dynconfig for a given service.
 
+Usage: 
+delete_topics.py --dc tec1 --container connected-bodies-webservice --environment bclab1
+"""
 import argparse
 import json
+import os
+import re
 import requests
+import subprocess32 as subprocess
 
+verbose = True
+simulated = False
 
-def get_registered_alerts(address, datacenter, environment, container):
+def get_registered_alerts(dc, contr, env):
+    
     req = {
-        "type": "dynconfigAlertSearch",
-        "environment": environment,
-        "datacenter": datacenter
+        "type": "dynconfigAlertSearch"
     }
-    if container:
-        req["container"] = container
+    
+    if (contr):
+        req["container"] = contr
         
-    result = requests.post("http://{addr}/dynconfigAlertSearch".format(addr=address), json=req)
-    result.raise_for_status()
+    if (env):
+        req["environment"] = env
+    
+    url = "http://dynconfig.{dc}.tivo.com:50000/dynconfigAlertSearch".format(dc=dc)
     
     if verbose:
-        print json.dumps(result.json())
+        print url
+        print json.dumps(req)
+        
+    result = requests.post(url, json=req)
+    result.raise_for_status()
     
     return result.json()['dynconfigAlert']
 
-def remove_alert(address, alert):
+def remove_registered_alert(alert):
     req = {
         "type": "dynconfigAlertRemove",
-        "environment": alert.get('environment'),
-        "datacenter": alert.get('datacenter'),
-        "container": alert.get('container'),
-        "name": alert.get('name')
+        "container": alert["container"],
+        "datacenter": alert["datacenter"],
+        "environment": alert["environment"],
+        "name": alert["name"]
     }
     
-    if simulated:
-        print "http://{addr}/dynconfigAlertRemove".format(addr=address)
-        print json.dumps(req)
-        return
+    url = "http://dynconfig.{dc}.tivo.com:50000/dynconfigAlertRemove".format(dc=alert["datacenter"])
     
-    resp = requests.post("http://{addr}/dynconfigAlertRemove".format(addr=address), json=req)
-    resp.raise_for_status()
+    if verbose:
+        print url
+        print json.dumps(req)
+        
+    if simulated:
+        return
+        
+    result = requests.post(url, json=req)
+    result.raise_for_status()
 
 def main():
-    parser = argparse.ArgumentParser(description="Add/remove containers to server.")
+    parser = argparse.ArgumentParser(description="Delete topics.")
     
     parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
     parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
-    parser.add_argument("-D", "--host", help="Dynconfig host", metavar="hostname", required=True)
-    parser.add_argument("-P", "--port", help="Dynconfig port", metavar="port", type=int, default=50000)
-    parser.add_argument("-c", "--container", help="Container name", metavar="NAME")
-    parser.add_argument("-d", "--datacenter", help="Datacenter name", metavar="NAME", required=True)
-    parser.add_argument("-e", "--environment", help="Environment name", metavar="NAME", required=True)
-    
+    parser.add_argument("-d", "--dc", help="Inception DC tag.", default="tec1")
+    parser.add_argument("-c", "--container", help="Inception service/container name.")
+    parser.add_argument("-e", "--environment", help="Inception environment name.", required=True)
     args = parser.parse_args()
     
-    global verbose
-    global simulated
+    if args.verbose:
+        global verbose
+        verbose = args.verbose
+        print args
     
-    verbose = args.verbose
-    simulated = args.simulated
-    
-    service_url = "{0}:{1}".format(args.host, args.port)
-    
-    alerts = get_registered_alerts( service_url,
-                                    args.datacenter,
-                                    args.environment,
-                                    args.container)
-    
-    for alert in alerts:
-        if verbose:
-            print "Removing {0}".format(alert)
-        remove_alert(service_url, alert)
+    if args.simulated:
+        global simulated
+        simulated = args.simulated
+     
+    for alert in get_registered_alerts(args.dc, args.container, args.environment):
+        remove_registered_alert(alert)
 
 if __name__ == "__main__":
     main()
