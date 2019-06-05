@@ -19,6 +19,7 @@ def external_to_internal(id):
     return result.json()['internalId']
 
 def internal_to_external(id):
+    id = id.strip().strip('",')
     req = {
         "type": "anonymizerInternalIdTranslate",
         "internalId": id
@@ -69,8 +70,9 @@ def main():
         print external_to_internal(args.external.strip('",'))
         
     if args.internal:
-        externalId = internal_to_external(args.internal.strip('",\n'))
+        externalId = internal_to_external(args.internal)
         print json.dumps(fe_mso_search(externalId), indent=2)
+        print json.dumps(fe_mso_pid_search(externalId), indent=2)
         print ""
         
     if args.internal_ids:

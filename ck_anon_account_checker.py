@@ -3,17 +3,30 @@
 from __future__ import print_function
 import argparse
 import atexit
+import json
 import os
 from confluent_kafka import Consumer, KafkaError, TopicPartition,  OFFSET_BEGINNING,  OFFSET_END
 import sys
 import traceback
 import time
 import threading
+from tivo_envelope_parser import parse_domain_object
+from translateId import internal_to_external 
 from pprint import pprint
+import requests
 
 verbose = False
 simulated = False
 outfile = None
+fe_host = None
+mismatch_ids = {}
+
+def fe_mso_pid_search(bodyId):
+    url = "http://{host}.tivo.com:8085/mind/mind22?type=feMsoPartnerIdGet&bodyId={bId}".format(host=fe_host, bId=bodyId)
+    headers = {'accept': 'application/json'}
+    result = requests.get(url, headers=headers)
+    result.raise_for_status()
+    return result.json()["partnerId"]
 
 '''
 Returns a dictionary with key = partition id and value = offset.
@@ -53,15 +66,30 @@ def list_topics(client, name):
             print("Partition:{0} - Start:{1} End:{2}".format(p, beg_offs[p], end_offs[p]))
         print("Total messages: {}".format(total))
         
+def verify_mso_pid(text):
+    global mismatch_ids
+    if text is 'NULL':
+        return
+    try:
+        accInfo = parse_domain_object(text)
+        if accInfo['headers']['ObjectType'] == 'anonAccountInfo':
+            id = accInfo['headers']['ObjectId']
+            tsn = internal_to_external(id)
+            fe_mso_pid = fe_mso_pid_search(tsn)
+            mso_pid = json.loads(accInfo['payload'])['msoPartnerId']
+            if fe_mso_pid != mso_pid:
+                mismatch_ids[id] = dict(fe_pid=fe_mso_pid, t_pid=mso_pid)
+    except Exception as e:
+        print(e)
+        pass
+        
 def redirect_to_file(text):
     if outfile:
         original = sys.stdout
         sys.stdout = open(outfile, 'a+')
         print(text)
-        print('---')
         sys.stdout = original
-    else:
-        print(text)
+    #print(text)
 
                         
 def read_topic(client,
@@ -97,7 +125,7 @@ def read_topic(client,
                 if message.error().code() == KafkaError._PARTITION_EOF:
                     continue
                 else:
-                    print(message.error(), file=sys.stderr)
+                    print(msg.error())
                     break
             
             if exit_at_end:
@@ -138,18 +166,16 @@ def read_topic(client,
             
             outstr = []
             if print_meta:
-                outstr.append ('{p}+{o}'.format(p=message.partition(), o=message.offset()))
+                outstr.append ('{p}+{o}+'.format(p=message.partition(), o=message.offset()))
             if print_key:
-                outstr.append ('{}'.format(message.key()))
+                outstr.append ('{}+'.format(message.key()))
             if print_ts:
-                outstr.append ('{}:{}'.format(message.timestamp(), time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime(message.timestamp()[1] / 1000))))
-                
-            if not suppress:    
-                if message.value():
-                    outstr.append (message.value())
-                else:
-                    outstr.append ("NULL")
-            redirect_to_file (' '.join(outstr))
+                outstr.append ('{}:{}+'.format(message.timestamp(), time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime(message.timestamp()[1] / 1000))))
+            if message.value():
+                outstr.append (message.value())
+            else:
+                outstr.append ("NULL")
+            verify_mso_pid (' '.join(outstr))
 
     if count_only:
         print("Total message read: {0}".format(tot_msgs))
@@ -190,6 +216,7 @@ def main():
     parser.add_argument("-t", "--topic", help="Topic name", metavar="NAME")
     parser.add_argument("-T", "--Timestamp", help="Print the message timestamp", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
+    parser.add_argument("-y", "--y-param", help="host for fe search.", default="pdk15.sj")
     parser.add_argument("-x", "--message-filter-exclude", help="Exclude messages with this term in the body", metavar="TERM", action="append")
     
     args = parser.parse_args()
@@ -197,10 +224,12 @@ def main():
     global verbose
     global simulated
     global outfile
+    global fe_host
     
     verbose = args.verbose
     simulated = args.simulated
     outfile = args.out_file_path
+    fe_host = args.y_param
     
     if verbose:
         print (args)
@@ -216,6 +245,14 @@ def main():
                 'default.topic.config': {'auto.offset.reset': 'smallest'}}
         
         client = Consumer(conf)
+        
+        env = args.topic.split('.')[1]
+        if env == 'staging':
+            fe_host = 'pdk01.st'
+        elif env == 'production':
+            fe_host = 'pdk15.sj'
+        elif env == 'tp1':
+            fe_host = 'pdk15.tp1'
         
         if args.list:
             list_topics(client, args.topic)
@@ -294,6 +331,8 @@ def main():
                    end_offs,
                    args.count_only,
                    tps)
+        for key,val in mismatch_ids.items():
+            redirect_to_file("{0} fe {1} topic {2}".format(key, val['fe_pid'], val['t_pid']))
     except KeyboardInterrupt as e:
         print ("Stopped", file=sys.stderr)
     finally:
