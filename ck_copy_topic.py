@@ -112,9 +112,9 @@ def main():
                     if not any(x in message.key() for x in args.key_filter):
                         continue
                 if verbose:
-                    print ("%s:%d:%d: key=%s value=%s" % (message.topic(), message.partition(),
-                                                  message.offset(), message.key(),
-                                                  message.value()))
+#                     print ("%s:%d:%d: key=%s value=%s" % (message.topic(), message.partition(),
+#                                                   message.offset(), message.key(),
+#                                                   message.value()))
                     dateStr = time.strftime("%Y-%m-%d", time.gmtime(message.timestamp()[1] / 1000))
                     print (dateStr)
                 if not simulated:

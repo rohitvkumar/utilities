@@ -6,6 +6,7 @@ import json
 import os
 import requests
 import sys
+import time
 from confluent_kafka import Consumer, KafkaError, TopicPartition,  OFFSET_BEGINNING,  OFFSET_END, KafkaException
 
 
@@ -75,15 +76,8 @@ def main():
             'default.topic.config': {'auto.offset.reset': 'smallest'}}
     
     dl_topic = "{0}.{1}.llc-accountinfo-update.dead-letter".format(dc, env)
-    ai_topic = "{0}.{1}.llc-accountinfo-update.anonAccountInfo".format(dc, env)
         
     client = Consumer(conf)
-    
-    def print_assignment(consumer, partitions):
-        print('Assignment:', partitions)
-
-    # Subscribe to topics
-#     client.subscribe([dl_topic], on_assign=print_assignment)
     
     metadata = client.list_topics(dl_topic).topics.get(dl_topic)
     
@@ -94,9 +88,10 @@ def main():
     client.assign(tps)
     
     try:
+        processed = []
         more = True
         while more:
-            messages = client.consume(500, 5)
+            messages = client.consume(1000, 5)
             for msg in messages:
                 if msg is None:
                     continue
@@ -109,6 +104,8 @@ def main():
                 if msg.value() is None:
                     continue
                 if msg.key() is None:
+                    continue
+                if msg.key() in processed:
                     continue
                 # Proper message
     #             sys.stderr.write('%% %s [%d] at offset %d with key %s:\n' %
@@ -136,6 +133,7 @@ def main():
                             cvReady = anonTcid_svc[1]['cutoverReady']
                         json_val = {"anonAccountId":anonTcid,"anonFeAccountId":anonFeid,"cutoverReady":cvReady,"msoPartnerId":msopid,"type":"anonAccountInfo"}
                         if anonTcid_svc[1]:
+                            processed.append(msg.key())
                             msg = '{0} {1}'.format(msg.key(), json.dumps(json_val).replace(" ", ""))
                         else:
                             msg = '{0}    {1}'.format(msg.key(), json.dumps(json_val).replace(" ", ""))

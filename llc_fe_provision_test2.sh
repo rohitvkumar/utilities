@@ -4,8 +4,7 @@ if [ $# -ne 2 ]; then
 fi
 
 set -x
-http://anonymizer.tec1.tivo.com/anonymizerInternalIdTranslate
-resp=$(curl "http://anonymizer.tec1.tivo.com/anonymizerInternalIdTranslate" -H "content-type:application/json"\
+resp=$(curl "http://anonymizer.qec1.tivo.com/anonymizerInternalIdTranslate" -H "content-type:application/json"\
  -H "Accept:application/json" -d '{"type":"anonymizerInternalIdTranslate","internalId":"'$1'"}' -s)
 set +x
 echo $resp | jq '.'
@@ -22,3 +21,7 @@ resp=$(curl "http://$2.tivo.com:8085/mind/mind22?type=feDevicePartnerCustomerIdG
 set +x
 echo $resp | jq '.'
 partnerCustomerId=$(echo $resp | jq '.partnerCustomerId' | sed -e 's/^"//' -e 's/"$//')
+
+set -x
+curl "http://$2.tivo.com:8085/mind/mind22?type=feAccountFeDeviceSearch&partnerId=$partnerId&partnerCustomerId=$partnerCustomerId" -H "Accept:application/json" -s | jq '.'
+set +x
