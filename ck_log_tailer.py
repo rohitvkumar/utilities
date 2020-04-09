@@ -14,6 +14,7 @@ from pprint import pprint
 verbose = False
 simulated = False
 outfile = None
+flatten = None
 
 '''
 Returns a dictionary with key = partition id and value = offset.
@@ -54,6 +55,8 @@ def list_topics(client, name):
         print("Total messages: {}".format(total))
         
 def redirect_to_file(text):
+    if flatten:
+        text = text.replace("\x0D\x0A", "\x1F")
     if outfile:
         original = sys.stdout
         sys.stdout = open(outfile, 'a+')
@@ -77,6 +80,7 @@ def read_topic(client,
                exit_at_end,
                end_offsets,
                count_only,
+               count,
                tps):    
     rules = {'all':all, 'any':any}
     counter = 0
@@ -109,7 +113,7 @@ def read_topic(client,
                     continue
             counter += 1
             if verbose:
-                print ("Read {:,} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
+                print ("Read {:,} messages {:,}.".format(counter, message.offset()).rjust(200), end='\r', file=sys.stderr)
             
             if key_filter:
                 if not message.key():
@@ -138,11 +142,14 @@ def read_topic(client,
             
             outstr = []
             if print_meta:
-                outstr.append ('{p}+{o}'.format(p=message.partition(), o=message.offset()))
+                outstr.append ('({p}, {o})'.format(p=message.partition(), o=message.offset()))
             if print_key:
                 outstr.append ('{}'.format(message.key()))
             if print_ts:
-                outstr.append ('{}:{}'.format(message.timestamp(), time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime(message.timestamp()[1] / 1000))))
+                outstr.append ('{}'.format(time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime(message.timestamp()[1] / 1000))))
+                
+            if print_meta or print_key or print_ts:
+                outstr.append("\n")
                 
             if not suppress:    
                 if message.value():
@@ -150,6 +157,10 @@ def read_topic(client,
                 else:
                     outstr.append ("NULL")
             redirect_to_file (' '.join(outstr))
+            
+            if count >= 0:
+                if count == counter:
+                    return
 
     if count_only:
         print("Total message read: {0}".format(tot_msgs))
@@ -169,9 +180,11 @@ def main():
     
     parser.add_argument("-b", "--broker", help="Kafka bootstrap broker", metavar="hostname", required=True)
     parser.add_argument("--count-only", help="Only count the number of messages.", action="store_true")
+    parser.add_argument("-c", "--count", help="Only consume this many.", type=int, default=-1)
     parser.add_argument("-d", "--Date-filter", help="Filter message based on time", metavar="YYYY-MM-DD", action="append")
     parser.add_argument("-e", "--exit-at-end", help="Quit when no new messages read in 5 seconds.", action="store_true")
     parser.add_argument("-f", "--out-file-path", help="File to store messages.")
+    parser.add_argument("-F", "--flatten", help="Replace CRLF with 0x1F.", action="store_true")
     parser.add_argument("-i", "--time-offset-mins", help="Time offset from end in minutes", type=int)
     parser.add_argument("-I", "--time-offset-hrs", help="Time offset from end in hours", type=int)
     parser.add_argument("-j", "--print-offset-delta", help="Only print the count of items.", action="store_true")
@@ -197,10 +210,12 @@ def main():
     global verbose
     global simulated
     global outfile
+    global flatten
     
     verbose = args.verbose
     simulated = args.simulated
     outfile = args.out_file_path
+    flatten = args.flatten
     
     if verbose:
         print (args)
@@ -293,6 +308,7 @@ def main():
                    args.exit_at_end,
                    end_offs,
                    args.count_only,
+                   args.count,
                    tps)
     except KeyboardInterrupt as e:
         print ("Stopped", file=sys.stderr)

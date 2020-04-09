@@ -1,20 +1,26 @@
-MRPC/2 520 1570
-AccountId: 0011131196
+MRPC/2 756 2413
+AccountId: 0025717289
 Content-Type: application/json
-HardwarePlatform: tivo_stb
-RequestType: partnerEventListLog
+DeviceType: stb
+HardwarePlatform: tivo_stb_diskless_tunerless
+Locale: en-US-tivo:pt.3640
+ProductName: TiVo Experience 3.20.7.4.RC47-USD-11-D22
+RequestType: eventListLog
 ResponseCount: none
-RpcId: 140217
-SchemaVersion: 23
+RpcId: 1221211581
+SchemaVersion: 25
 Type: request
+X-DefaultHostId: tsn:D690BB2562AA3A2
+X-DestinationBodyId: tsn:D2200000178289C
 X-Hop: 0
-X-Middlemind-Host: 10.100.218.18
+X-Middlemind-Host: 10.10.20.139
 X-Middlemind-PartnerId: 3095
 X-Middlemind-ReferenceId:
-X-Middlemind-RequestId: 10.100.218.18-anon:0000016600-69664-1486244833
-X-Middlemind-Source: anon:0000016600
+X-Middlemind-RequestId: 10.10.20.139-anon:0256081627-464-1534972530
+X-Middlemind-Source: anon:0256081627
+X-SenderBodyId: tsn:D2200000178289C
 X-applicationName: Unknown Application
-X-applicationSessionId: tsn:8D900019025F0B7:0
+X-applicationSessionId: tsn:D2200000178289C:0
 X-applicationVersion: Unknown Version
 
-{"event": [{"bodyId": "tsn:8D900019025F0B7", "deviceType": "stb", "programPosition": "1486244699879", "sequenceNumber": 870, "source": "liveTv", "timeZone": "America/Los_Angeles", "timestampMilliseconds": "1486244700024", "type": "viewStopEvent", "what": {"channelNumber": "4-2", "sourceType": "terrestrial", "stationId": "tivo:st.38519923", "type": "viewBroadcast"}}, {"bodyId": "tsn:8D900019025F0B7", "programPosition": "1486244694000", "recordingId": "tivo:rc.11779", "sequenceNumber": 871, "subscriptionType": "seasonPass", "timestampMilliseconds": "1486244700590", "type": "recordingStopEvent", "what": {"channelNumber": "4-2", "contentIdGuess": "tivo:ct.350987242", "sourceType": "terrestrial", "stationId": "tivo:st.38519923", "type": "viewBroadcast"}}, {"bodyId": "tsn:8D900019025F0B7", "deviceType": "stb", "programPosition": "1486244700865", "sequenceNumber": 872, "source": "liveTv", "timeZone": "America/Los_Angeles", "timestampMilliseconds": "1486244700886", "type": "viewStartEvent", "what": {"channelNumber": "4-2", "sourceType": "terrestrial", "stationId": "tivo:st.38519923", "type": "viewBroadcast"}}, {"bodyId": "tsn:8D900019025F0B7", "programPosition": "1486244700865", "sequenceNumber": 873, "timestampMilliseconds": "1486244700887", "type": "viewStateEvent", "viewport": {"height": 65536, "type": "rectangle", "width": 65536, "x": 0, "y": 0}}, {"bodyId": "tsn:8D900019025F0B7", "playSpeed": 100, "programPosition": "1486244700865", "sequenceNumber": 874, "timestampMilliseconds": "1486244700887", "type": "viewStateEvent"}], "type": "partnerEventListLog"}
+{"event": [{"bodyId": "tsn:D2200000178289C", "isIdle": true, "sequenceNumber": 2341, "timestampMilliseconds": "1534972305528", "type": "userIdleEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "down", "programPosition": "0", "sequenceNumber": 2342, "timestampMilliseconds": "1534972322763", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "down", "programPosition": "0", "sequenceNumber": 2343, "timestampMilliseconds": "1534972323205", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "down", "programPosition": "0", "sequenceNumber": 2344, "timestampMilliseconds": "1534972324070", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "down", "programPosition": "0", "sequenceNumber": 2345, "timestampMilliseconds": "1534972324647", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "isIdle": false, "sequenceNumber": 2346, "timestampMilliseconds": "1534972325526", "type": "userIdleEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "down", "programPosition": "0", "sequenceNumber": 2347, "timestampMilliseconds": "1534972325573", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "up", "programPosition": "0", "sequenceNumber": 2348, "timestampMilliseconds": "1534972326938", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "right", "programPosition": "0", "sequenceNumber": 2349, "timestampMilliseconds": "1534972328139", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "right", "programPosition": "0", "sequenceNumber": 2350, "timestampMilliseconds": "1534972329230", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "right", "programPosition": "0", "sequenceNumber": 2351, "timestampMilliseconds": "1534972330117", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "right", "programPosition": "0", "sequenceNumber": 2352, "timestampMilliseconds": "1534972331246", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "right", "programPosition": "0", "sequenceNumber": 2353, "timestampMilliseconds": "1534972332684", "type": "viewUserInputEvent"}, {"bodyId": "tsn:D2200000178289C", "keyCode": "select", "programPosition": "0", "sequenceNumber": 2354, "timestampMilliseconds": "1534972333965", "type": "viewUserInputEvent"}], "type": "eventListLog"}

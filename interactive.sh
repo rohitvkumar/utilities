@@ -17,7 +17,7 @@ docker run  -it --rm --entrypoint "/home/tivo/$CONTAINER/bin/$CONTAINER" \
             --env DYNCONFIG_ENDPOINT=dynconfig.$DC.tivo.com:50000 \
             --env TOKEN_ENDPOINT=core01.$DC.tivo.com:40017 \
             --env ANONYMIZER_HOST=anonymizer.$DC.tivo.com \
-            --env HOSTNAME=local \
+            --env HOSTNAME=laptop-rohit.$DC.tivo.com \
             --publish $PORT:$PORT \
             -v /tmp/logs/$CONTAINER:/TivoData/Log \
             -v /tmp/data/$CONTAINER:/TivoData/$CONTAINER \

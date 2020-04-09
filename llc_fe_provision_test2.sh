@@ -4,7 +4,7 @@ if [ $# -ne 2 ]; then
 fi
 
 set -x
-resp=$(curl "http://anonymizer.qec1.tivo.com/anonymizerInternalIdTranslate" -H "content-type:application/json"\
+resp=$(curl "http://anonymizer.tec1.tivo.com/anonymizerInternalIdTranslate" -H "content-type:application/json"\
  -H "Accept:application/json" -d '{"type":"anonymizerInternalIdTranslate","internalId":"'$1'"}' -s)
 set +x
 echo $resp | jq '.'

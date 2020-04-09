@@ -41,12 +41,15 @@ def main():
     parser.add_argument("-k", "--key-filter", help="Only copy messages with these terms in the key", metavar="TERM", action="append")
     parser.add_argument("--port", help="Kafka bootstrap broker port", metavar="port", type=int, default=9092)
     parser.add_argument("-p", "--partition", help="Topic partitions to consume from", metavar="partition", type=int, action="append")
-    parser.add_argument("-s", "--simulated", help="Debugging only - no changes will be made to cluster.", action="store_true")
     parser.add_argument("-o", "--offset", help="Copy all data or most recent", choices=['beginning', 'end'], default='beginning')
     parser.add_argument("-O", "--abs-offset", help="Absolute offset", type=int, default=0)
     parser.add_argument("-t", "--to-topic", help="Topic name", metavar="NAME", required=True)
     parser.add_argument("-T", "--to-broker", help="Kafka bootstrap broker destination", metavar="hostname")
     parser.add_argument("-v", "--verbose", help="Verbose output.", action="store_true")
+    parser.add_argument("--execute", help="Actual.", action="store_true")
+    
+    parser.add_argument("-S", "--start-time", help="Starting timestamp.", type=int)
+    parser.add_argument("-E", "--end-time", help="Ending timestamp.", type=int)
     
     args = parser.parse_args()
     
@@ -54,7 +57,11 @@ def main():
     global simulated
     
     verbose = args.verbose
-    simulated = args.simulated
+    simulated = True
+    if args.execute:
+        simulated = False
+    else:
+        print("---------------------Simulation only, use --execute to copy for real---------------------")
     
     if verbose:
         print (args)
@@ -68,7 +75,7 @@ def main():
         consumer_conf = {'bootstrap.servers': bootstrap_src,
                 'enable.auto.commit': 'false',
                 'session.timeout.ms': 6000,
-                'group.id': 'log_tailer',
+                'group.id': 'log_copier',
                 'api.version.request': True,
                 'default.topic.config': {'auto.offset.reset': 'earliest' if args.offset == 'beginning' else 'latest'}}
         
@@ -82,7 +89,7 @@ def main():
         else:
             end_offs = get_offsets_for_timestamps(consumer, args.from_topic, args.partition, OFFSET_END)
             tps = [TopicPartition(args.from_topic, p, end_offs[p] + args.abs_offset) for p in partitions]
-        print(tps)
+        #print(tps)
         
         consumer.assign(tps)
         
@@ -93,6 +100,7 @@ def main():
             print ("Destination topic: {0}".format(producer.list_topics(args.to_topic).topics))
         
         counter = 0
+        copy_count = 0
         keep_running = True
         while keep_running:
             messages = consumer.consume(500, 5)
@@ -107,29 +115,41 @@ def main():
                         print(msg.error())
                         break
                 counter += 1
-                print ("Read {0} messages.".format(counter), end='\r')
+                print ("Read {:,} messages.".format(counter).rjust(200), end='\r', file=sys.stderr)
                 if args.key_filter and message.key():
                     if not any(x in message.key() for x in args.key_filter):
                         continue
+                    
+                time_type = message.timestamp()[0]
+                time_stamp = message.timestamp()[1]
+                if args.start_time:
+                    if time_stamp < args.start_time:
+                        continue
+                    
+                if args.end_time:
+                    if time_stamp > args.end_time:
+                        continue
+                    
+                copy_count += 1
+                        
                 if verbose:
+                    dateStr = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(message.timestamp()[1] / 1000))
+                    print ("{} - {}".format(message.timestamp()[1], dateStr))
 #                     print ("%s:%d:%d: key=%s value=%s" % (message.topic(), message.partition(),
 #                                                   message.offset(), message.key(),
 #                                                   message.value()))
-                    dateStr = time.strftime("%Y-%m-%d", time.gmtime(message.timestamp()[1] / 1000))
-                    print (dateStr)
                 if not simulated:
-                    time_type = message.timestamp()[0]
-                    time_stamp = message.timestamp()[1]
-                    producer.produce(topic=args.to_topic,
-                                  value=message.value(),
-                                  partition=message.partition(),
-                                  key=message.key(),
-                                  timestamp=time_stamp)
+                    producer.produce(topic=args.to_topic
+                                  ,value=message.value()
+                                  ,partition=message.partition()
+                                  ,key=message.key()
+                                  #,timestamp=time_stamp
+                                  )
             
             producer.flush()
         
     except KeyboardInterrupt as e:
-        print ("Stopped")
+        print ("Stopped - copied {} messages".format(copy_count))
         consumer.close()
         producer.flush()
 
