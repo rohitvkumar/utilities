@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import argparse
-from kafka.vendor import six
+import sys
 
 def djb2a_hash(Key):
     hash = 5381
@@ -21,8 +21,10 @@ def murmur2(data):
     """
     # Python2 bytes is really a str, causing the bitwise operations below to fail
     # so convert to bytearray.
-    if six.PY2:
+    if sys.version_info[0] < 3:
         data = bytearray(bytes(data))
+    else:
+        data = data.encode()
 
     length = len(data)
     seed = 0x9747b28c
@@ -88,8 +90,9 @@ def main():
     
     key = args.key
     num = args.num_partitions
+    print(args)
+
     hash = (murmur2(key) & 0x7fffffff)
-    
     print("Mumur2 Hashed val = {0}, partition = {1}".format(hash, hash % num))
     
     hash = djb2a_hash(key)

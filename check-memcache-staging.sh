@@ -28,16 +28,18 @@ for i in ${arr[@]}
 do
    for TSN in "${tsnArray[@]}"
    do 
-    bodyInfoKey="dm:SentBodyEntitlementsToSDToken-tsn:$TSN"
+    anonAccountId="dm%3AAnonAccountId-tsn%3A$TSN"
     bodyInfoKey2="dm%3ASentBodyEntitlementsToSDToken-tsn%3A$TSN"
-    
     excludedPartnerIds="dm%3AexcludedPartnerIds-tsn%3A:$TSN"
 
     echo "retrieving cache key $bodyInfoKey2 for tsn: $TSN in server $i" | tee -a $logPath
     echo "get $bodyInfoKey2" | nc $i 3307 | tee -a $logPath
     
-    echo "retrieving cache key $excludedPartnerIds for tsn: $TSN in server $i" | tee -a $logPath
-    echo "get $excludedPartnerIds" | nc $i 3307 | tee -a $logPath
+    #echo "retrieving cache key $excludedPartnerIds for tsn: $TSN in server $i" | tee -a $logPath
+    #echo "get $excludedPartnerIds" | nc $i 3307 | tee -a $logPath
+
+    echo "retrieving cache key $anonAccountId for tsn: $TSN in server $i" | tee -a $logPath
+    echo "get $anonAccountId" | nc $i 3307 | tee -a $logPath
 
    done
 done

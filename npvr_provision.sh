@@ -29,7 +29,7 @@ do
    anonId=$(curl 'http://anonymizer.tec1.tivo.com/anonymizerExternalIdTranslate' \
    -d '{"type": "anonymizerExternalIdTranslate","externalId": '$tsn'}' -H content-type:application/json -s | jq '.internalId')
    echo "AnonId: $anonId"
-   anonFeAccountId=$(curl 'http://llc-accountinfo-update-tp1.tpc2.tivo.com:50225/anonAccountInfoGet' \
+   anonFeAccountId=$(curl 'http://llc-accountinfo-update-staging.tpc1.tivo.com:50225/anonAccountInfoGet' \
    -d '{"type":"anonAccountInfoGet","bodyId":'$anonId'}' -H content-type:application/json -s | jq '.anonFeAccountId')
    echo "FeAccountIdAnon: $anonFeAccountId"
 done
