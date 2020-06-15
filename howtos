@@ -1,0 +1,52 @@
+Cat the last middlemind log file:
+CURRDIR=$(ls -d1tr /TivoData/Log/middlemind/mmd-* | tail -n 1);tail -f $CURRDIR/$(ls -1tr $CURRDIR | tail -n 1)
+cd $(ls -d1tr /TivoData/Log/middlemind/mmd-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/mindMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/cloudMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/authMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/kafkaMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/livelogMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/authMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/remoteMindset-* | tail -n 1)
+tail -f $(ls -1tr /TivoData/Log/middlemind/mindMindset-* | tail -n 1)
+grep <tsn> $(find -name "/TivoData/Log/middlemind/*.log") | grep Adding | awk '{print $1" "$2" "$3" "$9;}'
+zgrep <tsn> $(find -name "/TivoData/Log/middlemind/*.log.gz") | grep Adding | awk '{print $1" "$2" "$3" "$9;}'
+
+TSN=<tsn>;ENV=<env>;NUM=<num>;for i in $(seq -f "%02g" 1 $NUM); do echo "---- pdk$i.$ENV.tivo.com ----"; ssh pdk$i.$ENV.tivo.com "zgrep $TSN /TivoData/Log/middlemind/mmd*/*.* | grep Adding"; done
+ANON=<tsn>;ENV=<env>;NUM=<num>;for i in $(seq -f "%02g" 1 $NUM); do echo "---- pdk$i.$ENV.tivo.com ----"; ssh pdk$i.$ENV.tivo.com "zgrep $ANON /TivoData/Log/middlemind/mmd*/*.*"; done
+
+for i in $(seq -f "%02g" 1 4); do ssh pdk$i.st 'grep <tsn> /TivoData/Log/middlemind/mmd*/*.log'; done
+for i in $(seq -f "%02g" 1 4); do ssh pdk$i.st 'zgrep <tsn> /TivoData/Log/middlemind/mmd*/*.gz'; done
+echo export "JAVA_HOME=\$(/usr/libexec/java_home)" >> ~/.bash_profile
+export JAVA_HOME=$(/usr/libexec/java_home)
+for i in $(seq -f "%02g" 1 4); do echo "---pdk$i.st---"; ssh pdk$i.st 'zgrep KafkaClientError /TivoData/Log/middlemind/*'; done
+vagrant ssh -- -A -i ~/.ssh/id_rsa
+vagrant ssh -- -i ~/.ssh/inception-scrum.rsa
+gradle -PextraChecks cleanTest test jacocoTestReport
+
+
+
+#Installing python-snappy and confluent-kafka
+brew install snappy
+brew install librdkafka
+pip install --user --global-option=build_ext --global-option="-I/usr/local/include" --global-option="-L/usr/local/lib" python-snappy
+pip install --user --global-option=build_ext --global-option="-I/usr/local/include" --global-option="-L/usr/local/lib" confluent-kafka
+
+for i in $(seq 1 5); do echo --core0$i--; curl http://core0$i.tec2.tivo.com:40002/check; done
+# Find the size of folders whose name match a pattern
+du $(find /TivoData/containers/data/kafka -name "__consumer_offsets*" 2> /dev/null) | awk '{total += $1} END {print total/1048576}'
+# Clean up known_hosts file
+sed -i .bak 's/10.100.167//' ~/.ssh/known_hosts
+# Check size for topic per broker
+for i in $(seq 1 5); do host=core0$i.tec1.tivo.com; echo ---$host---; ssh $host "du \$(find /TivoData/containers/data/kafka -name __consumer_offsets* 2> /dev/null) | awk '{total += \$1} END {print total/1048576}'";done
+python -m SimpleHTTPServer <port>
+./gradlew dependencyInsight --configuration compile --dependency javax.servlet
+curl http://awseb-e-c-AWSEBLoa-QBWCGW3M9G9A-2122941936.us-west-1.elb.amazonaws.com/info | jq '.'
+docker run -t --rm --net host -w /tmp/logs -v /tmp/logs:/tmp/logs docker.tivo.com/rvalsakumar/bodydata-ks-auditor functional-tests rohit-02.tec1.tivo.com
+find /TivoData/Log/webservices/mind2-17* -name "*.gz" -exec zgrep -- "Maximum queue wait reached" {} +
+SIG=$(md5 -s mbs4qfaaf9cub4cgx8db4bdpkKAxHCfnhtmrhRtgeB8839qU$(date +%s) | cut -d ' ' -f4);curl -X POST -k -i "https://api-public.tivo.com/adidsvc-qa/deviceAdParamsGet?apikey=mbs4qfaaf9cub4cgx8db4bdp&sig=$SIG" -vv
+ldapsearch -LLL -H ldaps://ldap-vip.tivo.com:3269 -D "CN=LDAPANON,OU=Service Accounts,OU=Universal,DC=corporate,DC=local"  -b 'dc=corporate,dc=local' -w 'Anonymous@' -o ldif-wrap=no '(sAMAccountName=rvalsakumar)' memberOf
+find . -name "*.gz" -exec zgrep -c "java.net.SocketException: Connection reset" {} +
+for i in $(seq -f "%02g" 1 4); do HOST=pdk$i.st.tivo.com; echo "---$HOST---"; ssh $HOST 'grep -r 192.168.141.72-mmweb-53020-248-634-1567113667 /TivoData/Log/middlemind/*.log'; done
+jmap -dump:format=b,file=/tmp/heap_$(date +"%Y%m%d").hprof $(ps -eo pid,cmd | grep remotemind-tomcat | grep -v grep | awk '{print $1}')
+make -qp | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);for(i in A)print A[i]}' | sort -u
